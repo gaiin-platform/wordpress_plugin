@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'chat_endpoint' => 'http://localhost:8000',
+    'chat_endpoint' => 'https://scsoiuzshn3a5mhmkpry6yr4z40arjrr.lambda-url.us-east-1.on.aws',
     'base_api_endpoint' => 'https://dev-api.vanderbilt.ai',
     'assistant_endpoint' => 'https://dev-assistants-api.vanderbilt.ai',
     'avatar_image' => 'Vanderbilt-Emblem.png',

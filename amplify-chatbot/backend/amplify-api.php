@@ -2,46 +2,6 @@
 
 ///////////////////  Requests  /////////////////// 
 
-function handle_get_assistant_data_request() {
-    $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
-    if (!is_config_loaded($config, ['assistant_endpoint', 'amplify_api_key', 'astgp'])) {
-        return new WP_Error('missing_params', 'Required paramas include assistant_endpoint, amplify_api_key, astgp', array('status' => 400));
-    }
-    $assistant_api_url = $config['assistant_endpoint'] . "/assistant/get/system_user"; 
-    $access_token = $config['amplify_api_key'];
-    $assistant_id = $config['astgp'];
-
-    
-    $url = add_query_arg(array('assistantId' => $assistant_id), $assistant_api_url);
-
-    $args = array(
-        'headers' => array(
-            'Authorization' => 'Bearer ' . $access_token
-        )
-    );
-
-    $response = wp_remote_get($url, $args);
-    if (is_wp_error($response)) {
-        return new WP_Error('request_failed', 'The API request failed');
-    }
-
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        return new WP_Error('json_decode_error', 'Failed to decode JSON response');
-    }
-
-    $status = $data["statusCode"];
-
-    if ($status !== 200) {
-        return new WP_Error('request_error', 'Failed to retrieve the assistant data successfully');
-    }
-
-    return $data['body']['assistant'];
-
-}
-
 function handle_submit_rating_request( WP_REST_Request $request ) {
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
     if (!is_config_loaded($config, ['assistant_endpoint', 'amplify_api_key'])) {
@@ -56,7 +16,6 @@ function handle_submit_rating_request( WP_REST_Request $request ) {
     $rating = $request->get_param('userRating');
     $feedback = $request->get_param('feedback') ?? '';
 
-    error_log("!1");
 
 
     if (empty($conversation_id) || empty($rating)) {
@@ -71,7 +30,7 @@ function handle_submit_rating_request( WP_REST_Request $request ) {
         )
         ));
 
-    error_log(print_r($body, true));
+    // error_log(print_r($body, true));
 
 
     $args = array(
@@ -83,7 +42,6 @@ function handle_submit_rating_request( WP_REST_Request $request ) {
         'method' => 'POST',
     );
 
-    error_log("sending");
 
     $response = wp_remote_post($assistant_api_url, $args);
     if (is_wp_error($response)) {
@@ -91,7 +49,6 @@ function handle_submit_rating_request( WP_REST_Request $request ) {
     }
 
     $body = wp_remote_retrieve_body($response);
-    error_log(print_r($body, true));
     $data = json_decode($body, true);
     
     if (json_last_error() !== JSON_ERROR_NONE) {
@@ -112,15 +69,16 @@ function handle_submit_rating_request( WP_REST_Request $request ) {
 
 
 function handle_follow_up_request( WP_REST_Request $request ) {
+    error_log("Handle following up");
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
     if (!is_config_loaded($config, ['email_to'])) {
         return new WP_Error('missing_params', 'Required params email_to missing', array('status' => 400));
     }
-    
+
+
     $email_subject = $request->get_param('subject');
     $email_body = $request->get_param('body');
 
-    
     if (empty($email_subject) || empty($email_body)) {
         return new WP_Error('missing_params', 'Missing data', array('status' => 400));
     }
@@ -179,11 +137,8 @@ function handle_send_email($email_to, $email_subject, $email_body) {
     }
 
     $body = wp_remote_retrieve_body($response);
-    error_log(print_r($body, true));
     $data = json_decode($body, true);
 
-
-    error_log(print_r($data, true));
     
     if (json_last_error() !== JSON_ERROR_NONE) {
         return new WP_Error('json_decode_error', 'Failed to decode JSON response', array('status' => 500));

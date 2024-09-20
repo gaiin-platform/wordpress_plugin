@@ -228,6 +228,7 @@ async function fetchBotConfiguration() {
 /////////////////// On Load Messages /////////////////// 
 
 async function initializeData() {
+    isInitialized = true;
     // starter message 
     if (botConfigData.startUpMessage) {
         await addChatTypingAnimation(AMPLIFY, 1000);
@@ -337,7 +338,6 @@ function continueChatUI() {
         document.querySelector(".lwh-open-cbot .custom-chatbot").style.zIndex = '9999';
         if (Object.keys(botConfigData).length > 0 && !isInitialized) {
             initializeData();
-            isInitialized = true;
         }
         chatIcon.style.animation = 'none';
     } else {
@@ -648,7 +648,7 @@ async function fetchChatData() {
             conversationTranscript.push({
                 sender: AMPLIFY,
                 time: new Date().toLocaleString(),
-                message: message,
+                message: assistantMessage,
             });
 
             disableButton(false);
@@ -734,15 +734,13 @@ async function submitFollowUp() {
     const message = document.getElementById('formMessage').value;
     const includeConversation = document.querySelector('.includeConversation').checked;
 
-     
+    const conversation = includeConversation ? `Conversation Id: ${conversationId}\n${getConversationTranscript()}`
+                              : '\nUser chose not to include the chatbot conversation.';
     const subject = `${botConfigData.assistantName} Follow-up Request - Amplify`;
-    const body =  `From: ${email} \n\n${message}\n\n
-        ${includeConversation ? `Conversation Id: ${conversationId}\n\n${getConversationTranscript()}`
-                              : '\nUser chose not to include the chatbot conversation.'}
-    `;
+    const body =  `From: ${email} \n\n${message}\n\n${conversation}`;
 
     try {
-        const response = await fetch(`${amplifyChatbotSettings.apiUrl}/submit-follow-up/`, {
+        const response = await fetch(`${amplifyChatbotSettings.apiUrl}/follow-up/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -789,7 +787,6 @@ async function sendEmailConversation() {
     const subject = document.getElementById('formSubject').value;
     const message = document.getElementById('formMessage').value;
 
-
     const body = `${message}\n\n${getConversationTranscript()}`;
 
     try {
@@ -833,8 +830,6 @@ async function sendEmailConversation() {
 }
 
 
-
-///////////////////  Utilities  /////////////////// 
 
 
 

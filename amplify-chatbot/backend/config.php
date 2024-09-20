@@ -14,8 +14,48 @@ function is_config_loaded($config, $required_keys) {
 }
 
 
+function handle_get_assistant_data_request() {
+    $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
+    if (!is_config_loaded($config, ['assistant_endpoint', 'amplify_api_key', 'astgp'])) {
+        return new WP_Error('missing_params', 'Required paramas include assistant_endpoint, amplify_api_key, astgp', array('status' => 400));
+    }
+    $assistant_api_url = $config['assistant_endpoint'] . "/assistant/get/system_user"; 
+    $access_token = $config['amplify_api_key'];
+    $assistant_id = $config['astgp'];
+
+    
+    $url = add_query_arg(array('assistantId' => $assistant_id), $assistant_api_url);
+
+    $args = array(
+        'headers' => array(
+            'Authorization' => 'Bearer ' . $access_token
+        )
+    );
+
+    $response = wp_remote_get($url, $args);
+    if (is_wp_error($response)) {
+        return new WP_Error('request_failed', 'The API request failed');
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return new WP_Error('json_decode_error', 'Failed to decode JSON response');
+    }
+
+    $status = $data["statusCode"];
+
+    if ($status !== 200) {
+        return new WP_Error('request_error', 'Failed to retrieve the assistant data successfully');
+    }
+
+    return $data['body']['assistant'];
+
+}
+
+
 function load_chat_bot_base_configuration(WP_REST_Request $request) {
-    include(plugin_dir_path(__FILE__) . '/amplify-api.php');
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
   
     $assistant_data = handle_get_assistant_data_request();
