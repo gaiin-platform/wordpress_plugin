@@ -1,5 +1,16 @@
 <?php
 
+
+function is_config_loaded($config, $required_keys) {
+    
+    foreach ($required_keys as $key) {
+        if (empty($config[$key])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 ///////////////////  Requests  /////////////////// 
 
 function handle_submit_rating_request( WP_REST_Request $request ) {
