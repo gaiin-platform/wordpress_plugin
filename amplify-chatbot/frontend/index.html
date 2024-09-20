@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amplify Chatbot</title>
+</head>
+
+
+<body>
+    <div class="chatbot-container lwh-open-cbot">
+        <div class="custom-chatbot__image" onclick="toggleShowChatUI()">
+            <div id="vanderbilt-chat-icon" class="vanderbilt-chat-icon" style="display: block; width: 140px; height: 140px;overflow: hidden;">
+                <img src="/wp-content/plugins/amplify-chatbot/assets/images/v_chat_icon.png"  style="width: 100%; height: 100%;">
+            </div>
+        </div>
+        <div class="custom-chatbot">
+
+            <div class="chat">
+                <div class="loading">
+                    <div class="loading-container flex-row">
+                        <img src="/wp-content/plugins/amplify-chatbot/assets/images/load_spinner.png" class="load-spinner" alt="Loading" />
+                        <p style="color: #6d6b71; margin-top: 2px;">Loading Amplify...</p>
+                    </div>
+                </div>
+                
+                <div class="popup">
+                    <p></h2>
+                </div>
+    
+                <div class="chat__header">
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center;">
+
+                            <div class="chat__menu-container">
+                                <div class="chat__menu-icon" style="margin-right: 10px; margin-top: -16px;" onclick="toggleShowMenu()">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </div>
+                                <div class="chat__dropdown-menu" id="menuDropdown" style="display: none;">
+                                    <img src="/wp-content/plugins/amplify-chatbot/assets/images/Vanderbilt-University.jpg"  style="width: 85%; height: 85%; padding: 8px;">
+
+                                    <ul>
+                                        <li><button onclick="toggleShowMenuActionPage('feedback')"><i class="fa-regular fa-comment-dots" style="font-size: 16px; margin-right: 2px;"></i> Submit Feedback</button></li>
+                                        <li><button onclick="toggleShowMenuActionPage('follow_up')"><i class="fa-regular fa-clipboard" style="font-size: 16px; margin-right: 2px;"></i> Request Follow-up</button></li>
+                                        <li><button onclick="toggleShowMenuActionPage('email_conversation')"><i class="fa-regular fa-envelope" style="font-size: 16px; margin-right: 2px;"></i> Email Conversation  </button></li>
+                                        <li><button onclick="clearConversation()"><i class="fa-regular fa-trash-alt" style="font-size: 16px; margin-right: 2px;"></i> Clear Conversation</button></li>
+                                        
+                                        <!-- <li><button onclick="viewPrivacyPolicy()"><i class="fa-solid fa-file-alt"></i> View Privacy Policy</button></li> -->
+                                    </ul>
+                                    
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="chat__title"></div>
+                                <div class="chat__status"><span></span> Offline</div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: auto; position: relative; flex-direction: column; height: 100%; flex-shrink: 0;"> 
+                            <div style="margin-left: auto; ">
+                                <div class="chat__close-icon" onclick="toggleShowChatUI()">
+                                    <i class="fa-solid fa-angle-down"></i>
+                                </div>
+                            </div>
+                            <div class="selected-group-type"></div>
+                        </div>
+                    </div>
+                </div>
+                
+
+                <div class="chat-container" style="display: block;">
+                    <div class="chat__messages"></div>
+                    
+                    <div class="disclaimer" style="display: none;">
+                        <div class="disclaimer__close-icon" style="margin-bottom: auto; margin-left: 2px;" onclick="toggleShowDisclaimer()">
+                            <i class="fa-solid fa-angle-down"></i>
+                            <span class="disclaimer-text" style="display: none; margin-bottom: 2px;"></span>
+                        </div>
+                        <div class="disclaimer-content"  style="display: none;"> </div>
+                    </div>
+                    
+                </div>
+
+                <div class="menu-forms-container" style="display: none;">
+                    <div class="form-container" style="display: none;">
+                        <button type="button" class="form__back-button"
+                                onclick="toggleShowChatPage()">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+
+                        <form style="width: 100%;"></form>
+                    </div>
+
+                </div>
+
+
+                <div class="star-rating">
+                    <label style="cursor: default; width: 55px; color: #616067;">Rating: </label>
+                    <div class="stars-container">
+                        <input type="radio" name="stars" id="star5">
+                        <label for="star5" class="star" data-value="5" title="5 Stars">
+                            <div class="star-stroke">
+                                <div class="star-fill"></div>
+                            </div>
+                        </label>
+                        <input type="radio" name="stars" id="star4">
+                        <label for="star4" class="star" data-value="4" title="4 Stars">
+                            <div class="star-stroke">
+                                <div class="star-fill"></div>
+                            </div>
+                        </label>
+                        <input type="radio" name="stars" id="star3">
+                        <label for="star3" class="star" data-value="3" title="3 Stars">
+                            <div class="star-stroke">
+                                <div class="star-fill"></div>
+                            </div>
+                        </label>
+                        <input type="radio" name="stars" id="star2">
+                        <label for="star2" class="star" data-value="2" title="2 Stars">
+                            <div class="star-stroke">
+                                <div class="star-fill"></div>
+                            </div>
+                        </label>
+                        <input type="radio" name="stars" id="star1">
+                        <label for="star1" class="star" data-value="1" title="1 Star">
+                            <div class="star-stroke">
+                                <div class="star-fill"></div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                </div>
+                
+
+                <div class="chat__input-area">
+                    <div class="selected-image-container">
+
+                    </div>
+                    <form id="messageForm">
+                        <div>
+                            <div class="input">
+                                <div>
+                                    <textarea id="message" name="message" placeholder="Type your message" autocomplete="off" required></textarea>
+                                </div>
+                            </div>                            
+                            
+                            <div>
+                                <button type="submit" id="submit-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+
+                <div class="powered-by flex flex-row text text-align-center">
+                    Powered by 
+                    <a href="https://www.vanderbilt.ai" class="amplify-vanderbilt-link" style="text-decoration: none; outline: none;" target="_blank">
+                        <span class="Amplify">Amplify</span> @
+                        <span class="Vanderbilt">Vanderbilt.ai</span>
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+    
+    </div>
+
+    <script>
+        if (!window.EventSource) {
+            document.querySelector('.chat__messages').innerHTML = '<p>Your browser does not support real-time streaming updates.</p>';
+        }
+    </script>
+</body>
+
+</html>
+
+
+
