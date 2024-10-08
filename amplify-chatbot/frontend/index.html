@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amplify Chatbot</title>
+    <link rel="stylesheet" href="/wp-content/plugins/amplify-chatbot/frontend/style.css" onload="this.media='all'" media="print" />
+
 </head>
 
 
@@ -13,6 +15,7 @@
         <div class="custom-chatbot__image" onclick="toggleShowChatUI()">
             <div id="vanderbilt-chat-icon" class="vanderbilt-chat-icon" style="display: block; width: 140px; height: 140px;overflow: hidden;">
                 <img src="/wp-content/plugins/amplify-chatbot/assets/images/v_chat_icon.png"  style="width: 100%; height: 100%;">
+              
             </div>
         </div>
         <div class="custom-chatbot">
@@ -21,12 +24,12 @@
                 <div class="loading">
                     <div class="loading-container flex-row">
                         <img src="/wp-content/plugins/amplify-chatbot/assets/images/load_spinner.png" class="load-spinner" alt="Loading" />
-                        <p style="color: #6d6b71; margin-top: 2px;">Loading Amplify...</p>
+                        <p style="color: #6d6b71; margin-top: 2px; font-size: 26px !important;">Loading Amplify...</p>
                     </div>
                 </div>
                 
                 <div class="popup">
-                    <p></h2>
+                    <p></p>
                 </div>
     
                 <div class="chat__header">
@@ -35,20 +38,16 @@
 
                             <div class="chat__menu-container">
                                 <div class="chat__menu-icon" style="margin-right: 10px; margin-top: -16px;" onclick="toggleShowMenu()">
-                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    <i class="fa-solid fa-ellipsis-vertical" style="font-style: normal !important;"></i>
                                 </div>
                                 <div class="chat__dropdown-menu" id="menuDropdown" style="display: none;">
                                     <img src="/wp-content/plugins/amplify-chatbot/assets/images/Vanderbilt-University.jpg"  style="width: 85%; height: 85%; padding: 8px;">
-
-                                    <ul>
-                                        <li><button onclick="toggleShowMenuActionPage('feedback')"><i class="fa-regular fa-comment-dots" style="font-size: 16px; margin-right: 2px;"></i> Submit Feedback</button></li>
-                                        <li><button onclick="toggleShowMenuActionPage('follow_up')"><i class="fa-regular fa-clipboard" style="font-size: 16px; margin-right: 2px;"></i> Request Follow-up</button></li>
-                                        <li><button onclick="toggleShowMenuActionPage('email_conversation')"><i class="fa-regular fa-envelope" style="font-size: 16px; margin-right: 2px;"></i> Email Conversation  </button></li>
-                                        <li><button onclick="clearConversation()"><i class="fa-regular fa-trash-alt" style="font-size: 16px; margin-right: 2px;"></i> Clear Conversation</button></li>
+                                        <div class="chat__dropdown-item" style=" border-top: 1px solid #ddd;"><button onclick="toggleShowMenuActionPage('feedback')"><i class="fa-regular fa-comment-dots" style="font-size: 16px; margin-right: 2px; font-style: normal !important;"></i> Submit Feedback</button></div>
+                                        <div class="chat__dropdown-item"><button onclick="toggleShowMenuActionPage('follow_up')"><i class="fa-regular fa-clipboard" style="font-size: 16px; margin-right: 2px; font-style: normal !important;"></i> Request Follow-up</button></div>
+                                        <div class="chat__dropdown-item"> <button onclick="toggleShowMenuActionPage('email_conversation')"><i class="fa-regular fa-envelope" style="font-size: 16px; margin-right: 2px; font-style: normal !important;"></i> Email Conversation  </button></div>
+                                        <div class="chat__dropdown-item"><button onclick="clearConversation()"><i class="fa-regular fa-trash-alt" style="font-size: 16px; margin-right: 2px; font-style: normal !important;"></i> Clear Conversation</button></div>
                                         
                                         <!-- <li><button onclick="viewPrivacyPolicy()"><i class="fa-solid fa-file-alt"></i> View Privacy Policy</button></li> -->
-                                    </ul>
-                                    
                                 </div>
                             </div>
 
@@ -60,7 +59,7 @@
                         <div style="margin-bottom: auto; position: relative; flex-direction: column; height: 100%; flex-shrink: 0;"> 
                             <div style="margin-left: auto; ">
                                 <div class="chat__close-icon" onclick="toggleShowChatUI()">
-                                    <i class="fa-solid fa-angle-down"></i>
+                                    <i class="fa-solid fa-angle-down" style="font-size: 18px; font-style: normal !important;"></i>
                                 </div>
                             </div>
                             <div class="selected-group-type"></div>

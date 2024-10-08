@@ -10,8 +10,10 @@ Author URI: https://vanderbilt.ai
 
 function amplify_chatbot_enqueue_scripts() {
     wp_enqueue_style('amplify-chatbot-style', plugins_url('/frontend/style.css', __FILE__));
-    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css');
-    wp_enqueue_script('amplify-chatbot-script', plugins_url('/frontend/script.js', __FILE__), array('jquery'), null, true);
+    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css');
+    wp_enqueue_script('marked', 'https://cdn.jsdelivr.net/npm/marked/marked.min.js', array(), null, true);
+    wp_enqueue_script('dompurify', 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.8/purify.min.js', array(), null, true);
+    wp_enqueue_script('amplify-chatbot-script', plugins_url('/frontend/script.js', __FILE__), array('jquery', 'marked', 'dompurify'), null, true);
 
     $current_user = wp_get_current_user();
     $user_email = $current_user->exists() ? $current_user->user_email : '';
@@ -57,21 +59,15 @@ add_action('rest_api_init', function () {
         'callback' => 'load_chat_bot_base_configuration',
     ));
 
-    // register_rest_route('amplify/v1', '/chat/', array(
-    //     'methods' => array('GET'),
-    //     'callback' => 'handle_chat_bot_request',
-    //     'permission_callback' => '__return_true',
-    // ));
-
-    // register_rest_route('amplify/v1', '/chat/', array(
-    //     'methods' => 'POST',
-    //     'callback' => 'handle_post_request',
-    //     'permission_callback' => '__return_true',  // Allows all users to access for testing
-    // ));
-
     register_rest_route('amplify/v1', '/chat/', array(
         'methods' => array('POST'),
         'callback' => 'handle_chat_bot_request',
+        'permission_callback' => '__return_true',
+    ));
+
+    register_rest_route( 'amplify/v1', '/fetch-presigned-url/', array(
+        'methods'             => 'POST',
+        'callback'            => 'handle_fetch_presigned_url_request',
         'permission_callback' => '__return_true',
     ));
     
@@ -95,18 +91,23 @@ add_action('rest_api_init', function () {
 
 });
 
-
-
 function amplify_register_settings() {
     // Register settings
     register_setting('amplify-settings-group', 'amplify_api_key');
     register_setting('amplify-settings-group', 'assistant_name');
     register_setting('amplify-settings-group', 'astgp');
+    register_setting('amplify-settings-group', 'typing_message');
+    register_setting('amplify-settings-group', 'retry_message');
     // register_setting('amplify-settings-group', 'default_model');
     register_setting('amplify-settings-group', 'default_group_types_question');
     register_setting('amplify-settings-group', 'start_up_message');
     register_setting('amplify-settings-group', 'font_size');
     register_setting('amplify-settings-group', 'email_to');
+    register_setting('amplify-settings-group', 'isDev', array(
+        'type' => 'boolean',
+        'default' => false,
+    ));
+
 }
 add_action('admin_init', 'amplify_register_settings');
 
@@ -146,6 +147,7 @@ function amplify_render_settings_page() {
             do_settings_sections('amplify-settings-group');
 
             ?>
+            <?php wp_nonce_field('amplify-settings-group-options'); ?>
            <div style="display: flex; flex-direction: row; align-items: center;"> 
                 <label style="margin-right: 10px;">* Marked as Required</label>
                 <?php
@@ -180,14 +182,24 @@ function amplify_render_settings_page() {
                 </tr> -->
 
                 <tr valign="top">
+                    <th scope="row">Startup Message</th>
+                    <td><textarea name="start_up_message" rows="3" cols="50"><?php echo esc_attr(get_option('start_up_message')); ?></textarea></td>
+                </tr>
+
+                <tr valign="top">
                     <th scope="row">Group Types Question (If none set in the admin interface)</th>
                     <td><textarea name="default_group_types_question" rows="2" cols="50"><?php echo esc_attr(get_option('default_group_types_question')); ?></textarea></td>
 
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Startup Message</th>
-                    <td><textarea name="start_up_message" rows="3" cols="50"><?php echo esc_attr(get_option('start_up_message')); ?></textarea></td>
+                    <th scope="row">On typing message</th>
+                    <td><textarea name="typing_message" rows="1" cols="50"><?php echo esc_attr(get_option('typing_message')); ?></textarea></td>
+                </tr>
+
+                <tr valign="top">
+                    <th scope="row">On chat fail, retry message</th>
+                    <td><textarea name="try_message" rows="1" cols="50"><?php echo esc_attr(get_option('retry_message')); ?></textarea></td>
                 </tr>
 
                 <tr valign="top">
@@ -195,6 +207,12 @@ function amplify_render_settings_page() {
                     <td><input type="number" name="font_size" value="<?php echo esc_attr(get_option('font_size')); ?>" /></td>
                 </tr>
 
+                <tr valign="top">
+                    <th scope="row">Check this box if running in Amplify Dev</th>
+                    <td>
+                        <input type="checkbox" name="isDev" value="1" <?php checked(get_option('isDev'), 1); ?> />
+                    </td>
+                </tr>
 
             </table>
         </form>

@@ -43,7 +43,7 @@ function handle_get_assistant_data_request() {
     if (json_last_error() !== JSON_ERROR_NONE) {
         return new WP_Error('json_decode_error', 'Failed to decode JSON response');
     }
-
+    // error_log(print_r($data ,true));
     $status = $data["statusCode"];
 
     if ($status !== 200) {
@@ -68,16 +68,18 @@ function load_chat_bot_base_configuration(WP_REST_Request $request) {
 
     $response = array(
     'startUpMessage' => $config["start_up_message"],
-    'fontSize' => $config["font_size"] ?? 16,
+    'typingMessage' => (isset($config["typing_message"]) && !empty($config["typing_message"])) ? $config["typing_message"] : "One moment while I gather relevant information for you.",
+    'retryMessage' => (isset($config["retry_message"]) && !empty($config["retry_message"])) ? $config["retru_message"] : "I was unable to get a response for you, please try again.",
+    'fontSize' => (isset($config["font_size"]) && !empty($config["font_size"])) ? $config["font_size"] : 16,
     'avatar' => $botAvatar,
     // 'amplifyLoader' => $amplify_loader,
-    'assistantName' => $assistant_data['name'] ?? $config['assistant_name'],
+    'assistantName' => isset($assistant_data['name']) && !empty($assistant_data['name']) ? $assistant_data['name'] : $config['assistant_name'],
     'groupId' => $assistant_data['groupId'],
     'prompt' => $assistant_data['instructions'],
     'groupTypes' => $assistant_data['group_types'],
-    'groupTypeQuestions' => $assistant_data['group_type_questions'] ?? $config['default_group_types_question'],
-    'model' => $assistant_data['model'], // ?? $config['default_model'],
-    'disclaimer' => $assistant_data['disclaimer'] ?? ''
+    'groupTypeQuestions' => (isset($assistant_data['group_type_questions']) && !empty($assistant_data['group_type_questions'])) ? $assistant_data['group_type_questions'] : $config['default_group_types_question'],
+    'model' => $assistant_data['model'], 
+    'disclaimer' => $assistant_data['disclaimer'] 
     );
 
     $response = new WP_REST_Response($response, 200);

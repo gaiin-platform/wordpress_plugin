@@ -1,17 +1,75 @@
 <?php
 
 
-function is_config_loaded($config, $required_keys) {
-    
-    foreach ($required_keys as $key) {
-        if (empty($config[$key])) {
-            return false;
-        }
-    }
-    return true;
-}
+
 
 ///////////////////  Requests  /////////////////// 
+
+function handle_fetch_presigned_url_request( WP_REST_Request $request ) {
+    $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
+    // error_log("Fetching presigned url ");
+    // Ensure required configurations are loaded
+    if (!is_config_loaded($config, ['base_api_endpoint', 'amplify_api_key'])) {
+        return new WP_Error('missing_params', 'Required params include base_api_endpoint, amplify_api_key', array('status' => 400));
+    }
+
+    $api_url = $config['base_api_endpoint'] . "/assistant/files/download";  
+    $access_token = $config['amplify_api_key'];
+
+    // Get parameters from the request
+    $key = $request->get_param('key');
+    $group_id = $request->get_param('group_id');
+
+    if (empty($key) || empty($group_id)) {
+        return new WP_Error('missing_params', 'Both key and group_id are required', array('status' => 400));
+    }
+
+    // Prepare the body of the request
+    $body = json_encode(
+        array(
+            'data' => array(
+                'key' => $key,
+                'groupId' => $group_id,
+            )
+        )
+    );
+
+    // Set up the request arguments
+    $args = array(
+        'headers' => array(
+            'Authorization' => 'Bearer ' . $access_token,
+            'Content-Type'  => 'application/json',
+        ),
+        'body'    => $body,
+        'method'  => 'POST',
+    );
+
+    // Make the API request
+    $response = wp_remote_post($api_url, $args);
+    // error_log(print_r($response, true));
+
+    if (is_wp_error($response)) {
+        return new WP_Error('request_failed', 'The API request failed', array('status' => 500));
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return new WP_Error('json_decode_error', 'Failed to decode JSON response', array('status' => 500));
+    }
+
+    if (isset($data['success']) && $data['success'] === true && isset($data['downloadUrl'])) {
+        return rest_ensure_response(array(
+            'success'     => true,
+            'downloadUrl' => $data['downloadUrl'],
+        ));
+    } else {
+        $message = isset($data['message']) ? $data['message'] : 'Failed to fetch presigned URL';
+        return new WP_Error('api_error', $message, array('status' => 500));
+    }
+}
+
 
 function handle_submit_rating_request( WP_REST_Request $request ) {
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
@@ -178,10 +236,9 @@ function handle_chat_bot_request( WP_REST_Request $request ) {
     ini_set('output_buffering', 'off');
     ini_set('zlib.output_compression', 'off');
 
-    // header('Content-Type: text/event-stream');
-    // header('Cache-Control: no-cache');
-    // header('Connection: keep-alive');
-
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
    
     if (ob_get_level()) {
         ob_end_clean();
@@ -215,7 +272,7 @@ function handle_chat_bot_request( WP_REST_Request $request ) {
     $payload = array(
         "model" => $model,
         "temperature" => 0.5,
-        "max_tokens" => 500,
+        "max_tokens" => 4000,
         "dataSources" => [],
         "messages" =>  $conversation_history,
         "options" => array(
@@ -249,6 +306,7 @@ function handle_chat_bot_request( WP_REST_Request $request ) {
     }
     ob_flush();
     flush();
+    wp_die();
 
     // End the request, nothing more to send
     exit();
@@ -259,37 +317,77 @@ function stream_chat_response($api_url, $access_token, $payload) {
     // Initialize cURL session
     $ch = curl_init($api_url);
 
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    ini_set('implicit_flush', 1);
+    ob_implicit_flush(1);
+
     // Set cURL options
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
         'Authorization: Bearer ' . $access_token,
         'Content-Type: application/json'
     ));
 
-    
-    curl_setopt($ch, CURLOPT_BUFFERSIZE, 64);
+    @ini_set('output_buffering', 'off');
+    @ini_set('zlib.output_compression', false);
+    ini_set('implicit_flush', 1);
+    ob_implicit_flush(1);
+
+    curl_setopt($ch, CURLOPT_TIMEOUT, 0); 
+    curl_setopt($ch, CURLOPT_BUFFERSIZE, 16);
     curl_setopt($ch, CURLOPT_TCP_NODELAY, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);  
-    curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($curl, $data) {
-       
-        $lines = explode("\n", $data);
-        foreach ($lines as $line) {
-            if (empty($line)) continue; 
+
+    $buffer = '';
+    curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($curl, $data) use (&$buffer) {
+        $buffer .= $data;
+        while (($pos = strpos($buffer, "\n")) !== false) {
+            $line = substr($buffer, 0, $pos);
+            $buffer = substr($buffer, $pos + 1);
+
+            if (empty(trim($line))) continue;
+
             $jsonString = trim(preg_replace('/^data:\s*/', '', $line));
-            // Decode the JSON string
             $parsedData = json_decode($jsonString, true);
 
-            if (isset($parsedData['d']) && is_string($parsedData['d'])) {
-                echo json_encode(['message' => $parsedData['d']]) . "\n\n";
-                ob_flush();
-                flush();  
-                
+            if (isset($parsedData['s']) && $parsedData['s'] === 'meta') {
+                if (isset($parsedData['state']['sources']['rag']['sources'])) {
+                    $sources = $parsedData['state']['sources']['rag']['sources'];
+                    $map = array();
+                    foreach ($sources as $source) {
+                        if (isset($source['name']) && isset($source['contentKey'])) {
+                            $name = $source['name'];
+                            $contentKey = $source['contentKey'];
+                            $map[$name] = $contentKey;
+                        }
+                    }
+                    // Send the map to the client
+                    echo json_encode(['dataSources' => $map]) . "\n\n";
+                    @ob_flush();
+                    @flush();
+                } 
+
+            } elseif (isset($parsedData['d']) && is_string($parsedData['d'])) {
+                echo json_encode(['message' => $parsedData['d']]) . "\n";
+                @ob_flush();
+                @flush();
+            } elseif (isset($parsedData['type']) && $parsedData['type'] === 'end') {
+                // error_log("END");
+                @ob_flush();
+                @flush();
+                break;  // Exit the loop if the end type is received
+            } else {
+                // error_log(print_r($parsedData, true));
             }
         }
+        @ob_flush();
+        @flush();
         return strlen($data); 
     });
-    curl_setopt($ch, CURLOPT_TIMEOUT, 0);  // No timeout for long-running streams
+
 
     // Execute the request
     curl_exec($ch);
@@ -301,223 +399,7 @@ function stream_chat_response($api_url, $access_token, $payload) {
 
     // Close the cURL session
     curl_close($ch);
-
+    wp_die();
     return true;
 }
-
-
-
-
-// function handle_post_request( WP_REST_Request $request ) {
-//     error_log('ENTER HANDLE POST REUQEST ');
-//     // Extract data from the POST request
-//     $conversation_history = $request->get_param('conversation_history');
-//     $conversation_id = $request->get_param('conversation_id');
-//     $model = $request->get_param('model');
-//     $prompt = $request->get_param('prompt');
-//     $group_id = $request->get_param('group_id');
-//     $group_type = $request->get_param('group_type');
-//     $num_prompts = $request->get_param('num_prompts');
-//     $assistant_name = $request->get_param('assistant_name');
-
-//     // Validate the conversation history
-//     if (!is_array($conversation_history)) {
-//         return new WP_Error('conversation_history_error', "Conversation history is not an array");
-//     }
-
-//     // Store all required data using transient
-//     $transient_key = 'conversation_' . $conversation_id;
-//     $conversation_data = [
-//         'conversation_history' => $conversation_history,
-//         'model' => $model,
-//         'prompt' => $prompt,
-//         'group_id' => $group_id,
-//         'group_type' => $group_type,
-//         'num_prompts' => $num_prompts,
-//         'assistant_name' => $assistant_name
-//     ];
-
-//     error_log('setting transient ');
-
-//     // Set the transient for 1 hour (3600 seconds)
-//     set_transient($transient_key, $conversation_data, 3600);
-
-//     return new WP_REST_Response(['status' => 'Message received and stored']);
-// }
-
-
-
-
-// function handle_chat_bot_request( WP_REST_Request $request ) {
-//     // Set headers for SSE.
-//     header('Content-Type: text/event-stream');
-//     header('Cache-Control: no-cache');
-//     header('Connection: keep-alive');
-//     header('X-Accel-Buffering: no');
-//     header("Access-Control-Allow-Origin: *");
-
-//     if (function_exists('apache_setenv')) {
-//         apache_setenv('no-gzip', '1');
-//         apache_setenv('dont-vary', '1');
-//     }
-
-//     ini_set('output_buffering', 'off');
-//     ini_set('zlib.output_compression', 'off');
-
-//     if (ob_get_level()) ob_end_clean();
-
-//     ob_flush();
-//     flush();
-
-
-
-
-//     echo "event: open\n";
-//     echo "data: connection opened\n\n";
-//     ob_flush();
-//     flush();
-
-
-//     // Retrieve conversation data using the transient key
-//     $conversation_id = $request->get_param('conversation_id');
-//     $transient_key = 'conversation_' . $conversation_id;
-//     $conversation_data = get_transient($transient_key);
-
-//     if (!$conversation_data) {
-//         error_log('No conversation found for ID: ' . $conversation_id);
-//         echo "data: " . json_encode(['message' => 'No conversation found']) . "\n\n";
-//         ob_flush();
-//         flush();
-//         error_log("Error closing now");
-//         // End stream
-//         echo "event: close\n";
-//         echo "data: connection closed\n\n";
-//         ob_flush();
-//         flush();
-//         exit();
-//     }
-
-//     // Retrieve conversation data and proceed with API call
-//     $conversation_history = $conversation_data['conversation_history'];
-//     $model = $conversation_data['model'];
-//     $prompt = $conversation_data['prompt'];
-//     $group_id = $conversation_data['group_id'];
-//     $group_type = $conversation_data['group_type'];
-//     $num_prompts = $conversation_data['num_prompts'];
-//     $assistant_name = $conversation_data['assistant_name'];
-
-//     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
-//     $api_url = $config['chat_endpoint']; 
-//     $access_token = $config['amplify_api_key'];
-
-//     $payload = array(
-//         "model" => $model,
-//         "temperature" => 0.5,
-//         "max_tokens" => 500,
-//         "dataSources" => [],
-//         "messages" =>  $conversation_history,
-//         "options" => array(
-//             "ragOnly" => true,
-//             "skipRag" => false,
-//             "model" => array("id" => $model),
-//             "prompt" => $prompt,
-//             "source" => 'wordpress',
-//             "assistantId" => $config['astgp'],
-//             "assistantName" => $assistant_name,
-//             "groupId" => $group_id,
-//             "groupType" => $group_type,
-//             "conversationId" => $conversation_id,
-//             "numPrompts" => $num_prompts
-//         )
-//     );
-
-//     // Stream chat response
-//     $result = stream_chat_response($api_url, $access_token, $payload);
-
-//     if (is_wp_error($result)) {
-//         error_log(print_r(get_error_message(), true));
-//         echo "event: error\n";
-//         echo 'data: ' . json_encode(['error' => $result->get_error_message()]) . "\n\n";
-//         ob_flush();
-//         flush();
-//         exit();
-//     }
-
-
-
-//     // echo ":ping\n\n";  // Comment to force the browser to maintain the connection
-//     // ob_flush();
-//     // flush();
-
-
-//     // not working 
-//     echo "event: close\n";
-//     echo "data: connection closed\n\n";
-//     ob_flush();
-//     flush();
-
-//     //so manually closing:
-//     echo "data: " . json_encode(['message' => "CLOSE_CONNECTION"]) . "\n\n";
-//     ob_flush();
-//     flush();
-
-//     // Clean up transient (optional)
-//     delete_transient($transient_key);
-//     http_response_code(204);
-//     exit();
-// }
-
-
-
-// function stream_chat_response($api_url, $access_token, $payload) {
-//     // Initialize cURL session
-//     $ch = curl_init($api_url);
-
-//     // Set cURL options for streaming
-//     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-//         'Authorization: Bearer ' . $access_token,
-//         'Content-Type: application/json'
-//     ));
-//     curl_setopt($ch, CURLOPT_POST, true);
-//     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, false); // Ensure streaming mode
-//     curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($curl, $data) {
-//         // Process the data stream chunk by chunk
-//         $lines = explode("\n", $data);
-//         foreach ($lines as $line) {
-//             if (empty($line)) continue;
-//             $jsonString = trim(preg_replace('/^data:\s*/', '', $line));
-//             $parsedData = json_decode($jsonString, true);
-
-//             // Stream each chunk to the client
-//             if (isset($parsedData['d']) && is_string($parsedData['d'])) {
-//                 echo "data: " . json_encode(['message' => $parsedData['d']]) . "\n\n";
-//                 ob_flush();
-//                 flush();
-//             }
-//         }
-//         return strlen($data);
-//     });
-
-//     curl_setopt($ch, CURLOPT_TIMEOUT, 0);  // No timeout for long-running streams
-
-//     // Execute the request
-//     curl_exec($ch);
-
-//     // Check for cURL errors
-//     if (curl_errno($ch)) {
-//         return new WP_Error('api_error', curl_error($ch));
-//     }
-
-//     error_log("Closing now");
-//     // End stream
-//     echo "event: close\n";
-//     echo "data: connection closed\n\n";
-//     ob_flush();
-//     flush();
-
-//     // Close the cURL session
-//     curl_close($ch);
-//     return true;
-// }
 
