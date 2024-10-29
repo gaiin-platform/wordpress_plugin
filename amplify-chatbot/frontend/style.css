@@ -255,6 +255,7 @@
     flex-direction: column;
     gap: 2px; 
     align-items: flex-start;
+    overflow-x: auto;
 }
 
 .typing-container .message p,
@@ -363,6 +364,7 @@
     position: relative;
     white-space: pre-wrap;
     flex-direction: column;  
+    overflow-x: auto;
 }
 
 .lwh-open-cbot .chat__messages__amplify .code-snippet {

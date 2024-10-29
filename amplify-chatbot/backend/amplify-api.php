@@ -13,7 +13,7 @@ function handle_fetch_presigned_url_request( WP_REST_Request $request ) {
         return new WP_Error('missing_params', 'Required params include base_api_endpoint, amplify_api_key', array('status' => 400));
     }
 
-    $api_url = $config['base_api_endpoint'] . "/assistant/files/download";  
+    $api_url = $config['base_api_endpoint'] . "/files/download";  
     $access_token = $config['amplify_api_key'];
 
     // Get parameters from the request
@@ -73,19 +73,17 @@ function handle_fetch_presigned_url_request( WP_REST_Request $request ) {
 
 function handle_submit_rating_request( WP_REST_Request $request ) {
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
-    if (!is_config_loaded($config, ['assistant_endpoint', 'amplify_api_key'])) {
-        return new WP_Error('missing_params', 'Required params include assistant_endpoint, amplify_api_key', array('status' => 400));
+    if (!is_config_loaded($config, ['base_api_endpoint', 'amplify_api_key'])) {
+        return new WP_Error('missing_params', 'Required params include base_api_endpoint, amplify_api_key', array('status' => 400));
     }
 
-    $assistant_api_url = $config['assistant_endpoint'] . "/assistant/save_user_rating"; 
+    $assistant_api_url = $config['base_api_endpoint'] . "/assistant/save_user_rating"; 
     
     $access_token = $config['amplify_api_key'];
 
     $conversation_id = $request->get_param('conversationId');
     $rating = $request->get_param('userRating');
-    $feedback = $request->get_param('feedback') ?? '';
-
-
+    $feedback = $request->get_param('userFeedback');
 
     if (empty($conversation_id) || empty($rating)) {
         return new WP_Error('missing_params', 'Both conversationId and userRating are required', array('status' => 400));
@@ -280,7 +278,7 @@ function handle_chat_bot_request( WP_REST_Request $request ) {
             "skipRag" => false,
             "model" => array("id" => $model),
             "prompt" => $prompt,
-            "source" => 'wordpress',
+            "source" => 'Wordpress',
             "assistantId" =>  $config['astgp'],
             "assistantName" =>  $assistant_name,
             "groupId"  => $group_id,

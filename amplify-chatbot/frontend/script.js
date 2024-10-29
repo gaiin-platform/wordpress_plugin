@@ -540,7 +540,7 @@ async function submitUserRating() {
 
     if (!ratingValue) {
         stars.classList.add('error-shake');
-        toggleShowPopupMessage("Please enter a Star rating.");
+        toggleShowPopupMessage("Please enter a star rating.");
         stars.addEventListener('animationend', () => {
             stars.classList.remove('error-shake');
         }, {once: true});
@@ -566,7 +566,7 @@ async function submitUserRating() {
             body: JSON.stringify({
                 conversationId: conversationId,
                 userRating: parseInt(ratingValue),
-                userFeedback: feedbackElement ? feedbackElement.value : '',
+                userFeedback: feedbackElement ? feedbackElement.value : null,
             })
         });
 

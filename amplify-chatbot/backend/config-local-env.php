@@ -9,10 +9,7 @@ return [
     'base_api_endpoint' => $is_dev
         ? 'https://dev-api.vanderbilt.ai'
         : 'https://prod-api.vanderbilt.ai',
-    'assistant_endpoint' => $is_dev
-        ? 'https://dev-assistants-api.vanderbilt.ai'
-        : 'https://prod-assistants-api.vanderbilt.ai',
-    'avatar_image' => 'Vanderbilt-Emblem.png',
+    'avatar_image' => 'Quincy.png',//'Vanderbilt-Emblem.png',
     'amplify_api_key' => get_option('amplify_api_key'),
     'assistant_name' =>  get_option('assistant_name'),
     'astgp' => get_option('astgp'),

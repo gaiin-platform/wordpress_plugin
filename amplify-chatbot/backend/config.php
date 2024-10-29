@@ -16,10 +16,10 @@ function is_config_loaded($config, $required_keys) {
 
 function handle_get_assistant_data_request() {
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
-    if (!is_config_loaded($config, ['assistant_endpoint', 'amplify_api_key', 'astgp'])) {
-        return new WP_Error('missing_params', 'Required paramas include assistant_endpoint, amplify_api_key, astgp', array('status' => 400));
+    if (!is_config_loaded($config, ['base_api_endpoint', 'amplify_api_key', 'astgp'])) {
+        return new WP_Error('missing_params', 'Required paramas include base_api_endpoint, amplify_api_key, astgp', array('status' => 400));
     }
-    $assistant_api_url = $config['assistant_endpoint'] . "/assistant/get/system_user"; 
+    $assistant_api_url = $config['base_api_endpoint'] . "/assistant/get/system_user"; 
     $access_token = $config['amplify_api_key'];
     $assistant_id = $config['astgp'];
 
@@ -43,7 +43,7 @@ function handle_get_assistant_data_request() {
     if (json_last_error() !== JSON_ERROR_NONE) {
         return new WP_Error('json_decode_error', 'Failed to decode JSON response');
     }
-    // error_log(print_r($data ,true));
+    error_log(print_r($data ,true));
     $status = $data["statusCode"];
 
     if ($status !== 200) {
