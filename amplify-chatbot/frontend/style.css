@@ -1,5 +1,5 @@
 :root {
-    --chatbot-width: 420px;
+    --chatbot-width: 500px;
     --chatbot-font-family: 'Segoe UI';
     --chatbot-image-position-bottom: -25px;
     --chatbot-image-position-right: -10px;
@@ -238,7 +238,9 @@
 
 
 
-
+.disclaimer-text a,
+.disclaimer-text a:focus,
+.disclaimer-text a:active,
 .typing-container .message a,
 .typing-container .message a[href^="#dataSource:"],
 .typing-container .message a:focus,
@@ -666,7 +668,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    max-height: 80px;
+    max-height: 100px;
     overflow-y: auto;
     background-color: white; /* Ensure it covers the chat__messages */
 }

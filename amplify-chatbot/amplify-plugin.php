@@ -23,6 +23,7 @@ function amplify_chatbot_enqueue_scripts() {
         'botConfigurationUrl' => esc_url_raw(rest_url('amplify/v1/chat-bot-config')),
         'nonce' => wp_create_nonce('wp_rest'),
         'assistantName' => get_option('assistant_name', 'Amplify'),
+        'isVisible' => get_option('isVisible'),
         'userEmail' => $user_email 
     ));
 }
@@ -93,6 +94,10 @@ add_action('rest_api_init', function () {
 
 function amplify_register_settings() {
     // Register settings
+    register_setting('amplify-settings-group', 'isVisible', array(
+        'type' => 'boolean',
+        'default' => false,
+    ));
     register_setting('amplify-settings-group', 'amplify_api_key');
     register_setting('amplify-settings-group', 'assistant_name');
     register_setting('amplify-settings-group', 'astgp');
@@ -157,6 +162,13 @@ function amplify_render_settings_page() {
             </div>
 
             <table class="form-table">
+                <tr valign="top">
+                    <th scope="row">Display Assistant On Site </th>
+                    <td>
+                        <input type="checkbox" name="isVisible" value="1" <?php checked(get_option('isVisible'), 1); ?> />
+                    </td>
+                </tr>
+
                 <tr valign="top">
                     <th scope="row">Email Users Can Request Follow-up To*</th>
                     <td><input type="text" name="email_to" value="<?php echo esc_attr(get_option('email_to')); ?>" /></td>

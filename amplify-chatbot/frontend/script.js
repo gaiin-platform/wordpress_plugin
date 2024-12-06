@@ -20,6 +20,13 @@ const dataSourceMap = {};
 
 ///////////////////  On Load  /////////////////// 
 document.addEventListener('DOMContentLoaded', function () {
+    if (amplifyChatbotSettings.isVisible) {
+        const chatbotContainer = document.querySelector('.chatbot-container.lwh-open-cbot');
+        if (chatbotContainer) chatbotContainer.style.display = 'block';
+    } else {
+        return;
+    }
+
     document.querySelector('.chat__title').textContent = amplifyChatbotSettings.assistantName;
     const button = document.querySelector('.lwh-open-cbot #submit-btn');
     button.disabled = true;
@@ -193,6 +200,8 @@ function displayGroupTypes(groupTypes) {
         typeButton.textContent = type;
         typeButton.style.cursor = "pointer";
         typeButton.onclick = () => {
+            const button = document.querySelector('.lwh-open-cbot #submit-btn');
+            if (selectedGroupType && !groupTypes[selectedGroupType].isDisabled && button.disabled) return;
             clearDisabledMessage();
             selectedGroupType = type;
             Array.from(typesContainer.children).forEach(btn => btn.classList.remove('active'));
@@ -738,12 +747,15 @@ async function setupDisclaimer() {
     if (disclaimer.style.display === 'none') {
         const disclaimerText = document.querySelector('.disclaimer-text');
         disclaimerText.style.display = 'inline';
-        disclaimerText.innerText = botConfigData.disclaimer;
+        let processedHTML = disclaimerConvertUrlsAndEmails(botConfigData.disclaimer);
+        processedHTML =   addBlankTargetAndRelToLinks(processedHTML);
+        disclaimerText.innerHTML = processedHTML;
         disclaimer.style.display = 'block';
         adjustMessagesHeight();
-        // adjustStarRatingPosition();
         setupStars();
         checkVisbility();
+
+        botConfigData.disclaimer = processedHTML;
     }
 }
 
@@ -884,7 +896,7 @@ function toggleShowDisclaimer() {
     if (disclaimerContent.classList.contains('collapsed')) {
         disclaimerContent.classList.remove('collapsed');
         icon.className = 'fas fa-angle-down';
-        disclaimerText.innerText = botConfigData.disclaimer;
+        disclaimerText.innerHTML = botConfigData.disclaimer;
     } else {
         disclaimerContent.classList.add('collapsed');
         icon.className = 'fas fa-angle-up';
@@ -1039,7 +1051,7 @@ function adjustMessagesHeight() {
 
 function adjustStarRatingPositionForDisclaimer() {
     const disclaimerContent = document.querySelector('.disclaimer-content');
-    stars.style.bottom = disclaimerContent.classList.contains('collapsed') ? '110px': '160px';
+    stars.style.bottom = disclaimerContent.classList.contains('collapsed') ? '110px': '180px';
     stars.style.removeProperty('top');
 }
 
@@ -1072,6 +1084,7 @@ const purifyConfig = {
     ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|ftp|tel|#dataSource):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
 };
 
+
 function convertUrlsToLinks(text) {
     let urlRegex = /(https?:\/\/[^\s]+)/g;
     return DOMPurify.sanitize(
@@ -1082,16 +1095,38 @@ function convertUrlsToLinks(text) {
     );
 }
 
+
+function disclaimerConvertUrlsAndEmails(text) {
+    // Convert Emails to mailto links
+    const emailRegex = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g;
+    let convertedText = text.replace(emailRegex, function (email) {
+        return `<a href="mailto:${email}">${email}</a>`;
+    });
+
+    // Convert URLs to clickable links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    convertedText = convertedText.replace(urlRegex, function (url) {
+        return `<a href="${url}">${url}</a>`;
+    });
+
+    return DOMPurify.sanitize(convertedText, purifyConfig);
+}
+
+
+
 function addBlankTargetAndRelToLinks(html) {
+    const sanitizedHTML = DOMPurify.sanitize(html, purifyConfig);
+
     const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const doc = parser.parseFromString(sanitizedHTML, 'text/html');
+
     doc.querySelectorAll('a').forEach(a => {
         a.setAttribute('target', '_blank');
         a.setAttribute('rel', 'noopener noreferrer');
     });
-    const sanitizedHTML = DOMPurify.sanitize(doc.body.innerHTML, purifyConfig);
-    return sanitizedHTML;
+    return doc.body.innerHTML;
 }
+
 
 function validateRequiredFields(onSubmit) {
     const emailForm = document.getElementById('formEmail');

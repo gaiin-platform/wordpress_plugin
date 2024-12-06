@@ -20,4 +20,5 @@ return [
     'retry_message' => get_option('retry_message'),
     'font_size' => get_option('font_size'),
     'email_to' => get_option('email_to'), 
+    'show_assistant' =>  get_option('isVisible'),
 ];
