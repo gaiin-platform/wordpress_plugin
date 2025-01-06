@@ -7,6 +7,7 @@ let content = [];
 let conversationTranscript = [];
 let botConfigData = {};
 let disclaimer = null;
+let disclaimerHeight = 0;
 let stars = null;
 let selectedGroupType = undefined;
 let canStartChatting = false;
@@ -153,6 +154,7 @@ async function fetchBotConfiguration() {
 
 async function initializeData() {
     isInitialized = true;
+
     // starter message 
     if (botConfigData.startUpMessage) {
         await addChatTypingAnimation(botConfigData.startUpMessage, false, 100, 800);
@@ -751,6 +753,7 @@ async function setupDisclaimer() {
         processedHTML =   addBlankTargetAndRelToLinks(processedHTML);
         disclaimerText.innerHTML = processedHTML;
         disclaimer.style.display = 'block';
+        disclaimerHeight = disclaimer.offsetHeight;
         adjustMessagesHeight();
         setupStars();
         checkVisbility();
@@ -822,7 +825,7 @@ function toggleShowSubmitFeedbackPopup(noCallback) {
 
         popup.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 2px;">
-                <p>Would you like to submit feedback?</p>
+                <p style="color: black !important;">Would you like to submit feedback?</p>
                 <div class="popup-buttons">
                     <button class="btn feedback-btn yes-btn">Yes</button>
                     <button class="btn feedback-btn no-btn">No</button>
@@ -860,17 +863,15 @@ function toggleShowSubmitFeedbackPopup(noCallback) {
 
 
 
-
-
 function toggleShowPopupMessage(val, color='#991a1a') {
     const popup = document.querySelector('.lwh-open-cbot .popup');
     popup.classList.remove('popup-animation-static');
-    popup.innerHTML = '<p></p>'; 
+    popup.innerHTML = '<p class="custom-popup-color"></p>'; 
     popup.style.display = 'block';
     popup.style.opacity = 1;
+    popup.style.setProperty('--popup-color', color);
     const innerPopup = popup.querySelector('p');
     innerPopup.innerText = val;
-    innerPopup.style.color = color;
     popup.classList.add('popup-animation');
     setTimeout(() => {
         popup.classList.remove('popup-animation');
@@ -939,7 +940,7 @@ function toggleShowMenuActionPage(page) {
                     <label>
                         <input type="checkbox" class="includeConversation"/>
                         <span class="custom-checkbox"></span>
-                        <span class="label-text">Include conversation</span>
+                        <span class="label-text" style="color: black!important;" >Include conversation</span>
                     </label>
                 </div>` +
                 submitButton("submit-followup-button");
@@ -1051,7 +1052,7 @@ function adjustMessagesHeight() {
 
 function adjustStarRatingPositionForDisclaimer() {
     const disclaimerContent = document.querySelector('.disclaimer-content');
-    stars.style.bottom = disclaimerContent.classList.contains('collapsed') ? '110px': '180px';
+    stars.style.bottom = disclaimerContent.classList.contains('collapsed') ? '110px': `${disclaimerHeight + 80}px`;
     stars.style.removeProperty('top');
 }
 
@@ -1096,23 +1097,86 @@ function convertUrlsToLinks(text) {
 }
 
 
+
+// function disclaimerConvertUrlsAndEmails(text) {
+//     // convert Markdown-style links: [linkText](URL)
+//     const markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+//     let convertedText = text.replace(markdownLinkRegex, function (match, linkText, url) {
+//         return `<a href="${url}">${linkText}</a>`;
+//     });
+
+//     // Convert Emails to mailto links
+//     const emailRegex = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g;
+//     convertedText = convertedText.replace(emailRegex, function (email) {
+//         return `<a href="mailto:${email}">${email}</a>`;
+//     });
+
+//     // Convert standalone URLs to clickable links
+//     const urlRegex = /(https?:\/\/[^\s]+)/g;
+//     convertedText = convertedText.replace(urlRegex, function (url) {
+//         // If the URL is already within a link (e.g., from Markdown replacement), skip converting
+//         if (convertedText.includes(`href="${url}"`)) {
+//             return url; 
+//         }
+//         return `<a href="${url}">${url}</a>`;
+//     });
+
+//     return DOMPurify.sanitize(convertedText, purifyConfig);
+// }
+
+
 function disclaimerConvertUrlsAndEmails(text) {
-    // Convert Emails to mailto links
-    const emailRegex = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g;
-    let convertedText = text.replace(emailRegex, function (email) {
-        return `<a href="mailto:${email}">${email}</a>`;
+    // 1. Convert Markdown links [text](URL) first
+    const markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+    let convertedText = text.replace(markdownLinkRegex, (match, linkText, url) => {
+        return `<a href="${url}">${linkText}</a>`;
     });
 
-    // Convert URLs to clickable links
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    convertedText = convertedText.replace(urlRegex, function (url) {
-        return `<a href="${url}">${url}</a>`;
-    });
+    // 2. Sanitize initial converted text
+    convertedText = DOMPurify.sanitize(convertedText, purifyConfig);
 
-    return DOMPurify.sanitize(convertedText, purifyConfig);
+    // 3. Parse into DOM
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(convertedText, 'text/html');
+
+    // 4. Function to convert emails and URLs in text nodes only
+    function convertTextNodes(node) {
+        // Process only text nodes and recursively walk through child nodes
+        if (node.nodeType === Node.TEXT_NODE) {
+            const originalText = node.textContent;
+            if (!originalText.trim()) return; // Skip empty text
+
+            // Convert emails to mailto links
+            const emailRegex = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g;
+            let newText = originalText.replace(emailRegex, (email) => {
+                return `<a href="mailto:${email}">${email}</a>`;
+            });
+
+            // Convert remaining URLs to links
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            newText = newText.replace(urlRegex, (url) => {
+                return `<a href="${url}">${url}</a>`;
+            });
+
+            // If changes were made, replace the text node with a fragment containing new HTML
+            if (newText !== originalText) {
+                const fragment = doc.createRange().createContextualFragment(newText);
+                node.parentNode.replaceChild(fragment, node);
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'A') {
+            // Only recurse into non-anchor elements, 
+            // so we don’t accidentally re-convert URLs inside existing links
+            Array.from(node.childNodes).forEach(convertTextNodes);
+        }
+    }
+
+    // 5. Walk through all nodes to convert text nodes
+    convertTextNodes(doc.body);
+
+    // 6. Return sanitized result
+    const finalHTML = DOMPurify.sanitize(doc.body.innerHTML, purifyConfig);
+    return finalHTML;
 }
-
-
 
 function addBlankTargetAndRelToLinks(html) {
     const sanitizedHTML = DOMPurify.sanitize(html, purifyConfig);
