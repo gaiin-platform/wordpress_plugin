@@ -4,8 +4,8 @@ $is_dev = get_option('isDev', false);
 
 return [
     'chat_endpoint' => $is_dev 
-        ? 'https://scsoiuzshn3a5mhmkpry6yr4z40arjrr.lambda-url.us-east-1.on.aws'
-        : 'https://jl3kwdj5shtwqxuqe3nj6qcxdy0wtwuy.lambda-url.us-east-1.on.aws',
+        ? 'https://dev-api.dev-amplify.vanderbilt.ai/chat_stream'
+        : 'https://prod-api.vanderbilt.ai/chat_stream',
     'base_api_endpoint' => $is_dev
         ? 'https://dev-api.vanderbilt.ai'
         : 'https://prod-api.vanderbilt.ai',
