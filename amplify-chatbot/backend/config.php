@@ -64,7 +64,7 @@ function load_chat_bot_base_configuration(WP_REST_Request $request) {
         return $assistant_data;
     }
 
-    $botAvatar =  plugins_url('../assets/images/' . $config["avatar_image"], __FILE__);
+    $botAvatar =  amplify_get_image_url('amplify_avatar_image_id', 'Vanderbilt-Emblem.png');
     // $amplify_loader = plugins_url('../assets/gif/amplify_loader.gif', __FILE__);
 
     $response = array(

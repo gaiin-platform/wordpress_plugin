@@ -104,6 +104,19 @@ function amplify_chatbot_enqueue_scripts() {
 }
 add_action('wp_enqueue_scripts', 'amplify_chatbot_enqueue_scripts');
 
+// Image URL from a Media Library attachment option, or the bundled fallback asset.
+// Attachment is served at 'medium' (max 300px) which stays sharp at the displayed sizes (90px / 56px, incl. 2x screens).
+function amplify_get_image_url($option_name, $fallback_file) {
+    $attachment_id = absint(get_option($option_name, 0));
+    if ($attachment_id) {
+        $url = wp_get_attachment_image_url($attachment_id, 'medium');
+        if ($url) {
+            return $url;
+        }
+    }
+    return plugins_url('assets/images/' . $fallback_file, __FILE__);
+}
+
 function amplify_chatbot_markup() {
     if (!amplify_should_enqueue_assets()) {
         return '';
@@ -115,7 +128,8 @@ function amplify_chatbot_markup() {
         return '';
     }
 
-    return str_replace('/wp-content/plugins/amplify-chatbot/', plugin_dir_url(__FILE__), $html);
+    $html = str_replace('/wp-content/plugins/amplify-chatbot/', plugin_dir_url(__FILE__), $html);
+    return str_replace('{{AMPLIFY_LAUNCHER_IMAGE}}', esc_url(amplify_get_image_url('amplify_launcher_image_id', 'Quincy.png')), $html);
 }
 
 // Render directly before </body> so no theme ancestor (sticky nav, overflow, transform)
@@ -209,6 +223,12 @@ function amplify_register_settings() {
         'default' => false,
         'sanitize_callback' => 'amplify_sanitize_checkbox',
     ));
+    register_setting('amplify-settings-group', 'amplify_launcher_image_id', array(
+        'sanitize_callback' => 'absint',
+    ));
+    register_setting('amplify-settings-group', 'amplify_avatar_image_id', array(
+        'sanitize_callback' => 'absint',
+    ));
     register_setting('amplify-settings-group', 'amplify_target_page_mode', array(
         'sanitize_callback' => function ($value) {
             return in_array($value, array('include', 'exclude'), true) ? $value : 'include';
@@ -237,6 +257,27 @@ function amplify_add_settings_page() {
     );
 }
 add_action('admin_menu', 'amplify_add_settings_page');
+
+function amplify_admin_enqueue_media($hook) {
+    if ($hook !== 'settings_page_amplify-settings') {
+        return;
+    }
+    wp_enqueue_media();
+}
+add_action('admin_enqueue_scripts', 'amplify_admin_enqueue_media');
+
+function amplify_render_image_field($option_name, $fallback_file, $max_preview_px) {
+    $id = absint(get_option($option_name, 0));
+    $preview = amplify_get_image_url($option_name, $fallback_file);
+    ?>
+    <div class="amplify-image-field" data-fallback="<?php echo esc_url(plugins_url('assets/images/' . $fallback_file, __FILE__)); ?>">
+        <input type="hidden" name="<?php echo esc_attr($option_name); ?>" value="<?php echo esc_attr($id); ?>" class="amplify-image-id" />
+        <img src="<?php echo esc_url($preview); ?>" class="amplify-image-preview" style="max-width: <?php echo (int) $max_preview_px; ?>px; height: auto; display: block; margin-bottom: 8px; background: #f0f0f1;" alt="" />
+        <button type="button" class="button amplify-image-select">Choose image</button>
+        <button type="button" class="button amplify-image-reset" <?php echo $id ? '' : 'style="display:none;"'; ?>>Reset to default</button>
+    </div>
+    <?php
+}
 
 function amplify_render_settings_page() {
     $target_mode = get_option('amplify_target_page_mode', 'include');
@@ -278,6 +319,22 @@ function amplify_render_settings_page() {
                     <th scope="row">Page IDs</th>
                     <td>
                         <textarea name="amplify_target_page_ids" rows="3" cols="50" placeholder="12, 34, 56"><?php echo esc_textarea($target_ids); ?></textarea>
+                    </td>
+                </tr>
+
+                <tr valign="top">
+                    <th scope="row">Chat Launcher Image</th>
+                    <td>
+                        <?php amplify_render_image_field('amplify_launcher_image_id', 'Quincy.png', 90); ?>
+                        <p class="description">The floating image that opens the chat. Displayed at 90px wide; the aspect ratio is kept. Default: Quincy.</p>
+                    </td>
+                </tr>
+
+                <tr valign="top">
+                    <th scope="row">Assistant Message Image</th>
+                    <td>
+                        <?php amplify_render_image_field('amplify_avatar_image_id', 'Vanderbilt-Emblem.png', 56); ?>
+                        <p class="description">Shown beside each assistant message. Displayed at 56px wide; the aspect ratio is kept. Default: Vanderbilt emblem.</p>
                     </td>
                 </tr>
 
@@ -334,5 +391,30 @@ function amplify_render_settings_page() {
             </table>
         </form>
     </div>
+    <script>
+    jQuery(function ($) {
+        $('.amplify-image-field').each(function () {
+            var $f = $(this), frame;
+            var $id = $f.find('.amplify-image-id'), $img = $f.find('.amplify-image-preview'), $reset = $f.find('.amplify-image-reset');
+            $f.find('.amplify-image-select').on('click', function () {
+                if (!frame) {
+                    frame = wp.media({ title: 'Choose image', button: { text: 'Use this image' }, library: { type: 'image' }, multiple: false });
+                    frame.on('select', function () {
+                        var a = frame.state().get('selection').first().toJSON();
+                        $id.val(a.id);
+                        $img.attr('src', (a.sizes && a.sizes.medium) ? a.sizes.medium.url : a.url);
+                        $reset.show();
+                    });
+                }
+                frame.open();
+            });
+            $reset.on('click', function () {
+                $id.val('');
+                $img.attr('src', $f.data('fallback'));
+                $reset.hide();
+            });
+        });
+    });
+    </script>
     <?php
 }

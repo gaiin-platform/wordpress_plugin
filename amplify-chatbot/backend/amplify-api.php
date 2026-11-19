@@ -245,18 +245,18 @@ function handle_chat_bot_request( WP_REST_Request $request ) {
 
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
     
-    if (!is_config_loaded($config, ['chat_endpoint', 'amplify_api_key'])) {
-        return new WP_Error('config_error', "Configuration values chat_endpoint', 'amplify_api_key are missing or not set correctly.");
+    if (!is_config_loaded($config, ['base_api_endpoint', 'amplify_api_key'])) {
+        return new WP_Error('config_error', "Configuration values base_api_endpoint and amplify_api_key are missing or not set correctly.");
     }
 
-    $api_url = $config['chat_endpoint']; 
+    $api_url = $config['base_api_endpoint'] . '/chat_stream'; 
     $access_token = $config['amplify_api_key'];
 
     $conversation_history = $request->get_param('conversation_history');
     $conversation_id = $request->get_param('conversation_id');
     $assistant_name = $request->get_param('assistant_name');
-    $model = $request->get_param('model') ??  $config['default_model'];
-    $prompt = $request->get_param('prompt') || '';
+    $model = $request->get_param('model');
+    $prompt = $request->get_param('prompt') ?: '';
     $group_id = $request->get_param('group_id');
     $group_type = $request->get_param('group_type');
     $num_prompts = $request->get_param('num_prompts');
@@ -292,10 +292,10 @@ function handle_chat_bot_request( WP_REST_Request $request ) {
     
     // error_log('Chat payload ' . print_r($payload, true));
 
-    $result = stream_chat_response($config['chat_endpoint'], $config['amplify_api_key'], $payload);
+    $result = stream_chat_response($config['base_api_endpoint'] . '/chat_stream', $config['amplify_api_key'], $payload);
 
     if (is_wp_error($result)) {
-        error_log(print_r(get_error_message), true);
+        error_log($result->get_error_message());
         echo "event: error\n";
         echo 'data: ' . json_encode(['error' => $result->get_error_message()]) . "\n\n";
         ob_flush();

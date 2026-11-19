@@ -3,18 +3,14 @@
 $is_dev = get_option('isDev', false);
 
 return [
-    'chat_endpoint' => $is_dev 
-        ? 'https://dev-api.dev-amplify.vanderbilt.ai/chat_stream'
-        : 'https://prod-api.vanderbilt.ai/chat_stream',
     'base_api_endpoint' => $is_dev
         ? 'https://dev-api.vanderbilt.ai'
         : 'https://prod-api.vanderbilt.ai',
-    'avatar_image' => 'Vanderbilt-Emblem.png',
     'amplify_api_key' => get_option('amplify_api_key'),
     'assistant_name' =>  get_option('assistant_name'),
     'astgp' => get_option('astgp'),
     // 'default_model' => get_option('default_model'),
-    'default_group_types_question' => get_option('default_group_types_question') ?? "Please select the group you best identify with.",
+    'default_group_types_question' => get_option('default_group_types_question'),
     'start_up_message' => get_option('start_up_message'),
     'typing_message' => get_option('typing_message'),
     'retry_message' => get_option('retry_message'),
