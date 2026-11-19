@@ -104,7 +104,7 @@ function amplify_chatbot_enqueue_scripts() {
 }
 add_action('wp_enqueue_scripts', 'amplify_chatbot_enqueue_scripts');
 
-function amplify_chatbot_shortcode() {
+function amplify_chatbot_markup() {
     if (!amplify_should_enqueue_assets()) {
         return '';
     }
@@ -117,20 +117,17 @@ function amplify_chatbot_shortcode() {
 
     return str_replace('/wp-content/plugins/amplify-chatbot/', plugin_dir_url(__FILE__), $html);
 }
-add_shortcode('amplify_chatbot', 'amplify_chatbot_shortcode');
 
-function amplify_append_chatbot_to_content($content) {
-    if (!amplify_should_enqueue_assets()) {
-        return $content;
-    }
-
-    if (is_admin() || !is_singular('page') || has_shortcode($content, 'amplify_chatbot')) {
-        return $content;
-    }
-
-    return $content . amplify_chatbot_shortcode();
+// Render directly before </body> so no theme ancestor (sticky nav, overflow, transform)
+// can create a stacking context that hides the chatbot.
+function amplify_chatbot_render_in_footer() {
+    echo amplify_chatbot_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted plugin template
 }
-add_filter('the_content', 'amplify_append_chatbot_to_content', 20);
+add_action('wp_footer', 'amplify_chatbot_render_in_footer', 100);
+
+// Legacy shortcode: markup now lives in the footer, so output nothing in content
+// (prevents a duplicate chatbot and raw shortcode text on existing pages).
+add_shortcode('amplify_chatbot', '__return_empty_string');
 
 // Include backend configuration
 require_once plugin_dir_path(__FILE__) . '/backend/config.php';
