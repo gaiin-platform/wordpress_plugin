@@ -21,50 +21,60 @@ const dataSourceMap = {};
 
 ///////////////////  On Load  /////////////////// 
 document.addEventListener('DOMContentLoaded', function () {
-    if (amplifyChatbotSettings.isVisible) {
-        const chatbotContainer = document.querySelector('.chatbot-container.lwh-open-cbot');
-        if (chatbotContainer) chatbotContainer.style.display = 'block';
-    } else {
+    if (!amplifyChatbotSettings.shouldRender) {
         return;
     }
 
-    document.querySelector('.chat__title').textContent = amplifyChatbotSettings.assistantName;
+    const chatbotContainer = document.querySelector('.chatbot-container.lwh-open-cbot');
+    if (!chatbotContainer) {
+        return;
+    }
+    chatbotContainer.style.display = 'block';
+
+    const titleEl = document.querySelector('.chat__title');
+    if (titleEl) {
+        titleEl.textContent = amplifyChatbotSettings.assistantName;
+    }
     const button = document.querySelector('.lwh-open-cbot #submit-btn');
-    button.disabled = true;
+    if (button) {
+        button.disabled = true;
+    }
     fetchBotConfiguration();
     
     const messageInput = document.querySelector('.lwh-open-cbot #message');
-    messageInput.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            if (canStartChatting) {
-                event.preventDefault();
-                button.click();
-            } else {
-                event.preventDefault(); // Prevent the newline from being added
-                messageInput.value = messageInput.value.trim();
+    if (messageInput) {
+        messageInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                if (canStartChatting) {
+                    event.preventDefault();
+                    if (button) button.click();
+                } else {
+                    event.preventDefault(); // Prevent the newline from being added
+                    messageInput.value = messageInput.value.trim();
+                }
             }
-        }
-    });
+        });
+    }
 
-    button.addEventListener('click', async function (event) {
-        event.preventDefault();
-        const userMessage = messageInput.value.trim();
-        if (userMessage) {
-            // Add user's message to the chat display
-            addUserChatMessage(userMessage);
-            messageInput.value = '';  // Clear the input field
-            // Fetch data with assistant response streaming
-            fetchChatData();
-        }
-    });
-
+    if (button && messageInput) {
+        button.addEventListener('click', async function (event) {
+            event.preventDefault();
+            const userMessage = messageInput.value.trim();
+            if (userMessage) {
+                // Add user's message to the chat display
+                addUserChatMessage(userMessage);
+                messageInput.value = '';  // Clear the input field
+                // Fetch data with assistant response streaming
+                fetchChatData();
+            }
+        });
+    }
 
     document.addEventListener('click', function (event) {
         const menuDropdown = document.getElementById('menuDropdown');
         const menuIcon = document.querySelector('.chat__menu-icon');
 
-        // If the menu is open and the click is outside the menu, close it
-        if (menuDropdown.style.display === 'block' && !menuDropdown.contains(event.target) && !menuIcon.contains(event.target)) {
+        if (menuDropdown && menuIcon && menuDropdown.style.display === 'block' && !menuDropdown.contains(event.target) && !menuIcon.contains(event.target)) {
             menuDropdown.style.display = 'none';
         }
     });
@@ -80,7 +90,9 @@ document.addEventListener('DOMContentLoaded', function () {
 ///////////////////  On Load Configuration  /////////////////// 
 async function fetchBotConfiguration() {
     const chatMessagesContainer = document.querySelector(".lwh-open-cbot .chat__messages");
-    document.querySelector(".lwh-open-cbot .loading").style.display = 'flex';
+    const loadingEl = document.querySelector('.lwh-open-cbot .loading');
+    if (loadingEl) loadingEl.style.display = 'flex';
+    if (!chatMessagesContainer) return;
     chatMessagesContainer.innerHTML = '';
     let botResponse = ''
     try {
@@ -101,9 +113,13 @@ async function fetchBotConfiguration() {
             chatMessagesContainer.style.fontSize = `${botConfigData.fontSize}px`;
 
             // remove loading display
-            document.querySelector(".lwh-open-cbot .loading").style.display = 'none';
-            document.querySelector(".lwh-open-cbot .chat__status").innerHTML = `<span></span> Online`;
-            document.querySelector(".lwh-open-cbot .chat__status").querySelector("span").style.background = "#68D391";
+            if (loadingEl) loadingEl.style.display = 'none';
+            const statusEl = document.querySelector('.lwh-open-cbot .chat__status');
+            if (statusEl) {
+                statusEl.innerHTML = `<span></span> Online`;
+                const statusDot = statusEl.querySelector('span');
+                if (statusDot) statusDot.style.background = '#68D391';
+            }
 
             const isOpen = document.querySelector(".lwh-open-cbot .chat").classList.contains('show');
 
@@ -139,7 +155,7 @@ async function fetchBotConfiguration() {
               });
 
         } else {
-            document.querySelector(".lwh-open-cbot .loading").style.display = 'none';
+            if (loadingEl) loadingEl.style.display = 'none';
             toggleShowPopupMessage(FAIL_MESSAGE);
             throw new Error("Request failed. Please try again! " + botResponse.status);
         }
@@ -544,7 +560,8 @@ async function fetchPresignedUrl(dataSource, key) {
 
 
 async function submitUserRating() {
-    const inChatPage = document.querySelector('.chat-container').style.display === 'block';
+    const chatContainer = document.querySelector('.chat-container');
+    const inChatPage = chatContainer ? chatContainer.style.display === 'block' : false;
 
     const rating = document.querySelector('.star-rating input[name="stars"]:checked');
     const ratingValue = rating ? rating.id.replace('star', '') : '';
@@ -765,7 +782,10 @@ async function setupDisclaimer() {
 function checkVisbility() {
     const chatMessagesContainer = document.querySelector('.lwh-open-cbot .chat__messages');
     const isScrolledToBottom = chatMessagesContainer.scrollHeight - chatMessagesContainer.scrollTop <= chatMessagesContainer.clientHeight + 1;
-    stars.style.visibility = isScrolledToBottom && !document.querySelector('.lwh-open-cbot #submit-btn').disabled ? 'visible' : 'hidden';
+    const submitBtn = document.querySelector('.lwh-open-cbot #submit-btn');
+    if (stars && submitBtn) {
+        stars.style.visibility = isScrolledToBottom && !submitBtn.disabled ? 'visible' : 'hidden';
+    }
 }
 
 function setupStars() {
@@ -779,7 +799,8 @@ function setupStars() {
     chatMessagesContainer.addEventListener('scroll', () => checkVisbility() );
 
     window.addEventListener('resize', () => {
-        if (document.getElementById('starRatingPlaceholder')) { adjustStarRatingPositionForForm();
+        if (document.getElementById('starRatingPlaceholder')) {
+            adjustStarRatingPositionForForm();
         } else {
             adjustStarRatingPositionForDisclaimer();
         }
@@ -802,6 +823,7 @@ function toggleShowChatUI() {
 function continueChatUI() {
     const chatWindow = document.querySelector(".lwh-open-cbot .chat");
     const chatIcon = document.querySelector('.vanderbilt-chat-icon');
+    if (!chatWindow) return;
     chatWindow.classList.toggle('show');
     if (chatWindow.classList.contains('show')) {
         document.querySelector(".lwh-open-cbot .custom-chatbot").style.zIndex = '9999';
@@ -820,6 +842,7 @@ function continueChatUI() {
 
 function toggleShowSubmitFeedbackPopup(noCallback) {
     const chatWindow = document.querySelector(".lwh-open-cbot .chat");
+    if (!chatWindow) return false;
     if (!feedbackSubmitted && content.length > 1 && chatWindow.classList.contains('show')) {
         const popup = document.querySelector('.lwh-open-cbot .popup');
 
@@ -865,6 +888,7 @@ function toggleShowSubmitFeedbackPopup(noCallback) {
 
 function toggleShowPopupMessage(val, color='#991a1a') {
     const popup = document.querySelector('.lwh-open-cbot .popup');
+    if (!popup) return;
     popup.classList.remove('popup-animation-static');
     popup.innerHTML = '<p class="custom-popup-color"></p>'; 
     popup.style.display = 'block';
@@ -894,6 +918,7 @@ function toggleShowDisclaimer() {
     const disclaimerContent = document.querySelector('.disclaimer-content');
     const disclaimerText = document.querySelector('.disclaimer-text');
     const icon = document.querySelector('.disclaimer__close-icon i');
+    if (!disclaimerContent || !disclaimerText || !icon) return;
     if (disclaimerContent.classList.contains('collapsed')) {
         disclaimerContent.classList.remove('collapsed');
         icon.className = 'fas fa-angle-down';
@@ -910,11 +935,15 @@ function toggleShowDisclaimer() {
 
 function toggleShowMenuActionPage(page) {
     clearForm(); // Clear the form every time we switch
-    document.querySelector('.chat-container').style.display = 'none';
-    document.querySelector('.menu-forms-container').style.display = 'block';
-    document.querySelector('.form-container').style.display = 'block';
-
+    const chatContainer = document.querySelector('.chat-container');
+    const menuFormsContainer = document.querySelector('.menu-forms-container');
+    const formWrapper = document.querySelector('.form-container');
     const formContainer = document.querySelector('.form-container form');
+    if (chatContainer) chatContainer.style.display = 'none';
+    if (menuFormsContainer) menuFormsContainer.style.display = 'block';
+    if (formWrapper) formWrapper.style.display = 'block';
+    if (!formContainer) return;
+
 
 
     switch (page) {
@@ -964,9 +993,12 @@ function toggleShowMenuActionPage(page) {
 }
 
 function toggleShowChatPage() {
-    document.querySelector('.menu-forms-container').style.display = 'none';
-    document.querySelector('.form-container').style.display = 'none';
-    document.querySelector('.chat-container').style.display = 'block';
+    const menuFormsContainer = document.querySelector('.menu-forms-container');
+    const formWrapper = document.querySelector('.form-container');
+    const chatContainer = document.querySelector('.chat-container');
+    if (menuFormsContainer) menuFormsContainer.style.display = 'none';
+    if (formWrapper) formWrapper.style.display = 'none';
+    if (chatContainer) chatContainer.style.display = 'block';
     if (disclaimer.style.display === 'none') {
         stars.style.bottom = '80px';
         stars.style.removeProperty('top');
@@ -987,9 +1019,11 @@ function toggleShowChatPage() {
 
 function clearConversation(reinitialize = true) {
     const menuDropdown = document.getElementById('menuDropdown');
-    menuDropdown.style.display = 'none';
-    document.querySelector(".lwh-open-cbot .selected-group-type").textContent = '';
+    if (menuDropdown) menuDropdown.style.display = 'none';
+    const selectedGroupEl = document.querySelector(".lwh-open-cbot .selected-group-type");
+    if (selectedGroupEl) selectedGroupEl.textContent = '';
     let chatMessagesContainer = document.querySelector('.lwh-open-cbot .chat__messages');
+    if (!chatMessagesContainer) return;
     chatMessagesContainer.innerHTML = '';
     content = [];
     conversationTranscript = [];
@@ -998,7 +1032,7 @@ function clearConversation(reinitialize = true) {
     disableButton(true);
     if (reinitialize) setTimeout(() => {
         initializeData();
-    }, [800])
+    }, 800)
     stars.classList.remove('visible');
     clearStars();
     conversationId = uuidv4();
@@ -1010,7 +1044,8 @@ function clearStars() {
     inputStars.forEach(star => {
         star.checked = false;
         star.addEventListener('change', (event) => {
-           const inChatPage = document.querySelector('.chat-container').style.display === 'block';
+           const chatContainer = document.querySelector('.chat-container');
+    const inChatPage = chatContainer ? chatContainer.style.display === 'block' : false;
            if (inChatPage)  {
             feedbackSubmitted = false; // in case they update the rating and dont want to submit feedback
             toggleShowSubmitFeedbackPopup(() => submitUserRating());
@@ -1022,7 +1057,8 @@ function clearStars() {
 }
 
 function clearForm() {
-    document.querySelector('.form-container form').innerHTML = '';
+    const formEl = document.querySelector('.form-container form');
+    if (formEl) formEl.innerHTML = '';
 }
 
 
@@ -1047,11 +1083,14 @@ function getConversationTranscript() {
 
 function adjustMessagesHeight() {
     const chatMessagesContainer = document.querySelector(".lwh-open-cbot .chat__messages");
-    chatMessagesContainer.style.height = `calc(100% - ${disclaimer.offsetHeight}px)`;
+    if (chatMessagesContainer && disclaimer) {
+        chatMessagesContainer.style.height = `calc(100% - ${disclaimer.offsetHeight}px)`;
+    }
 }
 
 function adjustStarRatingPositionForDisclaimer() {
     const disclaimerContent = document.querySelector('.disclaimer-content');
+    if (!disclaimerContent || !stars) return;
     stars.style.bottom = disclaimerContent.classList.contains('collapsed') ? '110px': `${disclaimerHeight + 80}px`;
     stars.style.removeProperty('top');
 }
@@ -1059,6 +1098,7 @@ function adjustStarRatingPositionForDisclaimer() {
 function adjustStarRatingPositionForForm() {
     if (content.length < 2 && !stars.classList.contains('visible')) setupStars();
     const placeholder = document.getElementById('starRatingPlaceholder');
+    if (!placeholder || !stars) return;
     const rect = placeholder.getBoundingClientRect();
     stars.style.removeProperty('bottom');
     stars.style.top = `${rect.top - 14}px`;
@@ -1069,7 +1109,7 @@ function adjustStarRatingPositionForForm() {
 
 function disableButton(disabled) {
     const button = document.querySelector('.lwh-open-cbot #submit-btn');
-    button.disabled = disabled;
+    if (button) button.disabled = disabled;
 }
 
 

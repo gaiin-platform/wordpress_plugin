@@ -22,9 +22,10 @@
     --chatbot-dot-color: grey;  
     --chatbot-border-width: 3px; 
     --chatbot-online-color: #68D391;
+    --popup-color: #991a1a
 }
 
-.fa, .fas, .far, .fal, .fab {  /* FontAwesome classes for different styles */
+.lwh-open-cbot .fa, .lwh-open-cbot .fas, .lwh-open-cbot .far, .lwh-open-cbot .fal, .lwh-open-cbot .fab {  /* FontAwesome classes for different styles */
     font-style: normal !important;
 }
 
@@ -54,7 +55,7 @@
 }
 
 .lwh-open-cbot .custom-chatbot .chat__messages__amplify a {
-    color: var(--chatbot-primary-color);
+    color: var(--chatbot-primary-color) !important;
     text-decoration: none;
 }
 
@@ -67,9 +68,11 @@
     opacity: 0;
     transform: translateY(100%);
     transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, display 0s linear 0.5s;
+    display: none;
 }
 
 .lwh-open-cbot .chat.show {
+    display: block;
     opacity: 1;
     transform: translateY(0);
     transition-delay: 0s;
@@ -94,7 +97,7 @@
 }
 
 .lwh-open-cbot .custom-chatbot button:hover i {
-    color: var(--chatbot-hover-color);
+    color: var(--chatbot-hover-color) !important;
     cursor: pointer;
 }
 
@@ -201,7 +204,7 @@
 
 .lwh-open-cbot .selected-group-type {
     font-size: 20px;
-    color: black;
+    color: black !important;
     margin-left: auto; 
     font-weight: bold;
     margin-top: 8px;
@@ -209,7 +212,7 @@
 }
 
 
-.lwh-open-cbot .form__back-button {
+.lwh-open-cbot .lwh-open-cbot .form__back-button {
     cursor: pointer;
     position: relative;
     margin-top: 3px;
@@ -246,45 +249,53 @@
 .typing-container .message a:focus,
 .typing-container .message a[href^="#dataSource:"]:focus,
 .typing-container .message a:active,
-.typing-container .message a[href^="#dataSource:"]:active {
-    color: #5495ff;
+.lwh-open-cbot .typing-container .message a[href^="#dataSource:"]:active {
+    color: #5495ff !important;
     text-decoration: underline !important;
     cursor: pointer;
     outline: none !important;
 }
 
-.typing-container .message {
+.disclaimer-text a:hover,
+.typing-container .message a:hover,
+.lwh-open-cbot .typing-container .message a[href^="#dataSource:"]:hover {
+    color: var(--chatbot-hover-color) !important; 
+    text-decoration: none !important; 
+}
+
+.lwh-open-cbot .typing-container .message {
     flex-direction: column;
     gap: 2px; 
     align-items: flex-start;
     overflow-x: auto;
+    color: var(--chatbot-primary-color) !important;
 }
 
-.typing-container .message p,
-.typing-container .message ol,
-.typing-container .message li,
-.typing-container .message ul {
+.lwh-open-cbot .typing-container .message p,
+.lwh-open-cbot .typing-container .message ol,
+.lwh-open-cbot .typing-container .message li,
+.lwh-open-cbot .typing-container .message ul {
     padding-left: 10px;
     padding-bottom: 0px !important;
 }
 
-.typing-container .chat__messages ul li,
-.typing-container .chat__messages ol li {
+.lwh-open-cbot .typing-container .chat__messages ul li,
+.lwh-open-cbot .typing-container .chat__messages ol li {
     margin-bottom: 0;
     padding-bottom: 0;
     list-style-position: inside;
     line-height: 1.2;
 }
 
-.typing-container  {
+.lwh-open-cbot .typing-container  {
     margin-top: 12px !important;
 }
 
-.typing-container .message div {
+.lwh-open-cbot .typing-container .message div {
     padding-bottom: 0px !important;
 }
 
-.typing-container .message li {
+.lwh-open-cbot .typing-container .message li {
     margin-left: 16px;
 }
 
@@ -611,7 +622,7 @@
     color: grey; /* Dim the text for disabled groups */
     cursor: not-allowed;
 }
-.disabled-container {
+.lwh-open-cbot .disabled-container {
     display: flex;
     width: 100%;
     align-items: center;
@@ -622,7 +633,7 @@
 
 
 
-.disabled-icon {
+.lwh-open-cbot .disabled-icon {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -638,7 +649,7 @@
     flex-shrink: 0;
 }
 
-.disabled-icon::after {
+.lwh-open-cbot .disabled-icon::after {
     content: '!';
     position: absolute;
     left: 33%; 
@@ -652,7 +663,7 @@
     font-size: 16px;
 }
 
-.chat-container {
+.lwh-open-cbot .chat-container {
     display: flex;
     flex-direction: column;
     height: var(--chatbot-height) ; 
@@ -661,40 +672,41 @@
 }
 
 
-.disclaimer {
+.lwh-open-cbot .disclaimer {
     font-size: 16px;
     border-top: 1px solid #eae7e7;
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    max-height: 100px;
+    max-height: 200px;
     overflow-y: auto;
     background-color: white; /* Ensure it covers the chat__messages */
 }
 
-.disclaimer-message {
+.lwh-open-cbot .disclaimer-message {
     color: rgba(109, 106, 106, 0.926);
     font-size: 14px;
     padding: 4px;
     margin-bottom: 6px;
 }
 
-.disclaimer-content {
+.lwh-open-cbot .disclaimer-content {
     transition: max-height 0.3s ease;
     overflow: hidden;
     padding: 4px;
 }
 
-.disclaimer-content.collapsed {
+.lwh-open-cbot .disclaimer-content.collapsed {
     max-height: 0;
 }
 
-.disclaimer-text {
+.lwh-open-cbot .disclaimer-text {
     margin-left: 8px;
     color: #616067;
-    font-size: 16px;
+    font-size: 16px !important;
     text-align: center;
+    white-space: pre-line;
 }
 
 
@@ -702,25 +714,37 @@
 @media (max-width: 679px) {
     .lwh-open-cbot .custom-chatbot {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        right: auto;
-        bottom: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        transform: none;
+        width: 100%;
+        z-index: 1000;
+    }
+    .lwh-open-cbot .chat {
+        border-radius: 12px 12px 0 0;
+        z-index: 1001;
+    }
+    :root {
+        --chatbot-height: 40vh;  /* Reduce the chat window height on mobile */
+        --chatbot-width: 96%;
     }
 }
 
 
-.Amplify {
+
+
+.lwh-open-cbot .Amplify {
     color: var(--chatbot-secondary-color);
 }
 
-.Vanderbilt { 
+.lwh-open-cbot .Vanderbilt { 
     color: var(--chatbot-vanderbilt-color);
 }
 
 
-.powered-by {
+.lwh-open-cbot .powered-by {
     text-align: center;
     font-size: 14px;
     font-weight: bold;
@@ -740,11 +764,11 @@
         transform: scale(1);
     }
 }
-.vanderbilt-chat-icon {
+.lwh-open-cbot .vanderbilt-chat-icon {
     animation: pulse 10s infinite;
 }
 
-.amplify-loader {
+.lwh-open-cbot .amplify-loader {
     margin-bottom: 20px;
     margin-left: 4px;
 }
@@ -816,7 +840,7 @@
 
 
 
-.chat__dropdown-menu {
+.lwh-open-cbot .chat__dropdown-menu {
     position: absolute;
     top: 46px;
     left: 0px;
@@ -832,37 +856,37 @@
 
 }
 
-.chat__dropdown-item {
+.lwh-open-cbot .chat__dropdown-item {
     padding: 8px 16px;
     border-bottom: 1px solid #ddd;
     transition: background-color 0.3s ease;
 }
 
-.chat__dropdown-item:hover {
+.lwh-open-cbot .chat__dropdown-item:hover {
     background-color: var(--chatbot-secondary-vanderbilt-color);
 }
 
-.chat__dropdown-item button:focus {
+.lwh-open-cbot .chat__dropdown-item button:focus {
     outline: none; 
     /* padding: 8px 0; */
 }
 
-.chat__dropdown-item:first-child {
+.lwh-open-cbot .chat__dropdown-item:first-child {
     border-top: 1px solid #ddd;
 }
 
-.chat__dropdown-item:last-child {
+.lwh-open-cbot .chat__dropdown-item:last-child {
     border-bottom: none;
 }
 
 
-.chat__dropdown-item button:active {
+.lwh-open-cbot .chat__dropdown-item button:active {
     transform: none;
     box-shadow: none; 
     padding: 8px 0;
 }
 
-.chat__dropdown-item button {
+.lwh-open-cbot .chat__dropdown-item button {
     background: none;
     border: none;
     font-size: 14px;
@@ -872,7 +896,7 @@
     padding: 8px 0; /* Ensure padding covers the entire button */
 }
 
-.chat__dropdown-menu img {
+.lwh-open-cbot .chat__dropdown-menu img {
     display: block;
     margin: 10px auto;
     max-width: 100%;
@@ -880,7 +904,7 @@
 }
 
 
-.star-rating {
+.lwh-open-cbot .star-rating {
     display: flex;
     align-items: center;
     flex-direction: row;
@@ -896,13 +920,13 @@
 
 }
 
-.star-rating.visible {
+.lwh-open-cbot .star-rating.visible {
     visibility: visible;
     opacity: 1;
 }
 
 
-.stars-container {
+.lwh-open-cbot .stars-container {
     display: flex;
     transform: translate(-10%, -22%) rotateY(180deg);
     margin-top: 14px;
@@ -910,7 +934,7 @@
 
 
 
-.star-rating label {
+.lwh-open-cbot .star-rating label {
     cursor: pointer;
     margin-right: 6px;
     display: inline-block;
@@ -921,11 +945,11 @@
 
 }
 
-.star-rating input {
+.lwh-open-cbot .star-rating input {
     display: none;
 }
 
-.star-stroke {
+.lwh-open-cbot .star-stroke {
     display: grid;
     place-items: center;
     width: 100%;
@@ -936,32 +960,32 @@
 }
   
 
-.star-fill {
+.lwh-open-cbot .star-fill {
     width: 80%;
     height: 80%;
     background: white;
     clip-path: inherit;
 }
 
-.star-rating input:checked + label .star-stroke,
-.star-rating label:hover .star-stroke {
+.lwh-open-cbot .star-rating input:checked + label .star-stroke,
+.lwh-open-cbot .star-rating label:hover .star-stroke {
     background: var(--chatbot-stars-color);
 }
 
-.star-rating input:checked + label .star-stroke,
-.star-rating input:checked + label .star-fill,
-.star-rating input:checked ~ label .star-stroke,
-.star-rating input:checked ~ label .star-fill {
+.lwh-open-cbot .star-rating input:checked + label .star-stroke,
+.lwh-open-cbot .star-rating input:checked + label .star-fill,
+.lwh-open-cbot .star-rating input:checked ~ label .star-stroke,
+.lwh-open-cbot .star-rating input:checked ~ label .star-fill {
     background: var(--chatbot-stars-color);
 }
 
 
-.star-rating label:hover .star-stroke .star-fill {
+.lwh-open-cbot .star-rating label:hover .star-stroke .star-fill {
     background: var(--chatbot-stars-color);
 }
 
-.star-rating label:hover ~ label .star-stroke,
-.star-rating label:hover ~ label .star-fill {
+.lwh-open-cbot .star-rating label:hover ~ label .star-stroke,
+.lwh-open-cbot .star-rating label:hover ~ label .star-fill {
     background: var(--chatbot-stars-color);
 }
 
@@ -972,20 +996,20 @@
 
 
 
-.checkbox-container {
+.lwh-open-cbot .checkbox-container {
     display: flex;
     align-items: center; 
 }
 
 
 
-.checkbox-wrapper .label-text{ 
-    margin-top: 16px;
+.lwh-open-cbot .checkbox-wrapper .label-text{ 
+    margin-top: 18px;
     margin-left: 4px;
 }
 
 
-  .checkbox-wrapper input[type=checkbox] {
+  .lwh-open-cbot .checkbox-wrapper input[type=checkbox] {
     -webkit-appearance: none;
     appearance: none;
     vertical-align: middle;
@@ -1000,8 +1024,8 @@
     cursor: pointer;
   }
 
-  .checkbox-wrapper input[type=checkbox]:before,
-  .checkbox-wrapper input[type=checkbox]:after {
+  .lwh-open-cbot .checkbox-wrapper input[type=checkbox]:before,
+  .lwh-open-cbot .checkbox-wrapper input[type=checkbox]:after {
     content: "";
     position: absolute;
     background: var(--chatbot-online-color);
@@ -1012,35 +1036,35 @@
     transform-origin: left center;
   }
 
-  .checkbox-wrapper input[type=checkbox]:before {
+  .lwh-open-cbot .checkbox-wrapper input[type=checkbox]:before {
     transform: rotate(45deg) translate(calc(var(--chatbot-border-width) / -2), calc(var(--chatbot-border-width) / -2)) scaleX(0);
     transition: transform 100ms ease-in 100ms;
   }
 
-  .checkbox-wrapper input[type=checkbox]:after {
+  .lwh-open-cbot .checkbox-wrapper input[type=checkbox]:after {
     width: calc(var(--chatbot-border-width) * 5);
     transform: rotate(-45deg) translateY(calc(var(--chatbot-border-width) * 2)) scaleX(0);
     transform-origin: left center;
     transition: transform 100ms ease-in;
   }
 
-  .checkbox-wrapper input[type=checkbox]:checked:before {
+  .lwh-open-cbot .checkbox-wrapper input[type=checkbox]:checked:before {
     transform: rotate(45deg) translate(calc(var(--chatbot-border-width) / -2), calc(var(--chatbot-border-width) / -2)) scaleX(1);
     transition: transform 100ms ease-in;
   }
 
-  .checkbox-wrapper input[type=checkbox]:checked:after {
+  .lwh-open-cbot .checkbox-wrapper input[type=checkbox]:checked:after {
     width: calc(var(--chatbot-border-width) * 5);
     transform: rotate(-45deg) translateY(calc(var(--chatbot-border-width) * 2)) scaleX(1);
     transition: transform 100ms ease-out 100ms;
   }
 
-  .checkbox-wrapper input[type=checkbox]:focus {
+  .lwh-open-cbot .checkbox-wrapper input[type=checkbox]:focus {
     outline: calc(var(--chatbot-border-width) / 2) solid var(--chatbot-vanderbilt-color);
   }
 
 
-.menu-forms-container {
+.lwh-open-cbot .menu-forms-container {
     display: flex;
     height: var(--chatbot-height) ; 
     position: relative;
@@ -1049,7 +1073,7 @@
     overflow-x: hidden;  
 }
 
-.form-container {
+.lwh-open-cbot .form-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1060,7 +1084,7 @@
 }
 
 
-form {
+.lwh-open-cbot .form-container form {
     flex-direction: column;
     min-width: 25rem;   
     display: flex;
@@ -1068,7 +1092,7 @@ form {
     height: 90%;
 }
 
-.title {
+.lwh-open-cbot .title {
     color: #212529;
     font-size: 28px;
     text-align: center; 
@@ -1079,7 +1103,7 @@ form {
 
 
 
-.form-control {
+.lwh-open-cbot .form-control {
     background-color: var(--chatbot-bg-color);
     border-radius: 1rem;
     border: 1px solid var(--chatbot-border-color); 
@@ -1098,14 +1122,14 @@ form {
 }
 
 
-.form-group .form-control {
+.lwh-open-cbot .form-group .form-control {
     padding-left: 2.2rem; 
     padding-right: 4px;
     border: 1px solid var(--chatbot-border-color);
 }
 
 
-.form-control:focus {
+.lwh-open-cbot .form-control:focus {
     outline: none; 
     margin-bottom: 20px;
     border-color: var(--chatbot-border-color); 
@@ -1116,19 +1140,19 @@ form {
 }
 
 
-.message .form-control {
+.lwh-open-cbot .message .form-control {
     overflow-y: auto;
     padding: 10px 15px;
 }
 
 
-::placeholder {
+.lwh-open-cbot ::placeholder {
     font-size: 16px;
     color: #838788;
 
 }
 
-input[type="text"], input[type="email"], textarea {
+.lwh-open-cbot input[type="text"], .lwh-open-cbot input[type="email"], .lwh-open-cbot textarea {
     border: 1px solid var(--chatbot-border-color); 
     font-size: 1rem;
     resize: none;
@@ -1137,12 +1161,12 @@ input[type="text"], input[type="email"], textarea {
 }
 
 
-.form-group.position-relative {
+.lwh-open-cbot .form-group.position-relative {
     position: relative;
     width: 100%;
 }
 
-.form-group .icon {
+.lwh-open-cbot .form-group .icon {
     position: absolute;
     top: 23%;
     left: 5%;
@@ -1152,7 +1176,7 @@ input[type="text"], input[type="email"], textarea {
 }
 
 
-.form__back-button {
+.lwh-open-cbot .form__back-button {
     position: absolute;
     top: 6px;
     left: 6px;
@@ -1160,7 +1184,7 @@ input[type="text"], input[type="email"], textarea {
 }
 
 
-.text-center {
+.lwh-open-cbot .text-center {
     text-align: center;
     width: 100%;
     margin-top: auto;
@@ -1189,7 +1213,7 @@ input[type="text"], input[type="email"], textarea {
     color: white;
 }
 
-.submit-form {
+.lwh-open-cbot .submit-form {
   background-color: var(--chatbot-vanderbilt-color);
   border-radius: 100px;
   box-shadow: 
@@ -1217,7 +1241,7 @@ input[type="text"], input[type="email"], textarea {
 
 }
 
-.submit-form:hover {
+.lwh-open-cbot .submit-form:hover {
     background-color: var(--chatbot-hover-color) !important;
     color: white; 
     transition: background-color 150ms, color 150ms; 
@@ -1225,7 +1249,7 @@ input[type="text"], input[type="email"], textarea {
 }
 
 
-.submit-form:active, .submit-form:focus {
+.lwh-open-cbot .submit-form:active, .lwh-open-cbot .submit-form:focus {
     outline: none;
     border: none;
     padding: 8px 26px;  
@@ -1259,13 +1283,13 @@ input[type="text"], input[type="email"], textarea {
 }
 
 
-.error-shake {
+.lwh-open-cbot .error-shake {
     border-color: red !important;
     animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
 }
 
 
-.regenerate-button {
+.lwh-open-cbot .regenerate-button {
     display: inline-block; 
     margin-left: 6px; 
     padding: 5px 10px; 
@@ -1283,14 +1307,18 @@ input[type="text"], input[type="email"], textarea {
 }
 
 
-.regenerate-button .fa-sync {
+.lwh-open-cbot .regenerate-button .fa-sync {
     margin-right: 5px; 
     color: red;
     font-style: normal !important;
     size: 18px;
 }
 
-.regenerate-button:hover {
+.lwh-open-cbot .regenerate-button:hover {
     background-color: #e8e8e8;
     border-color: #b3b3b3;
+}
+
+.lwh-open-cbot .custom-popup-color {
+    color: var(--popup-color) !important;
 }

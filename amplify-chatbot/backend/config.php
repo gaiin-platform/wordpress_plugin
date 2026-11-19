@@ -17,7 +17,7 @@ function is_config_loaded($config, $required_keys) {
 function handle_get_assistant_data_request() {
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
     if (!is_config_loaded($config, ['base_api_endpoint', 'amplify_api_key', 'astgp'])) {
-        return new WP_Error('missing_params', 'Required paramas include base_api_endpoint, amplify_api_key, astgp', array('status' => 400));
+        return new WP_Error('missing_params', 'Required params include base_api_endpoint, amplify_api_key, astgp', array('status' => 400));
     }
     $assistant_api_url = $config['base_api_endpoint'] . "/assistant/get/system_user"; 
     $access_token = $config['amplify_api_key'];
@@ -56,6 +56,7 @@ function handle_get_assistant_data_request() {
 
 
 function load_chat_bot_base_configuration(WP_REST_Request $request) {
+    error_log("___Enter load chat bot base configurations__");
     $config = include(plugin_dir_path(__FILE__) . '/config-local-env.php');
   
     $assistant_data = handle_get_assistant_data_request();
@@ -69,7 +70,7 @@ function load_chat_bot_base_configuration(WP_REST_Request $request) {
     $response = array(
     'startUpMessage' => $config["start_up_message"],
     'typingMessage' => (isset($config["typing_message"]) && !empty($config["typing_message"])) ? $config["typing_message"] : "One moment while I gather relevant information for you.",
-    'retryMessage' => (isset($config["retry_message"]) && !empty($config["retry_message"])) ? $config["retru_message"] : "I was unable to get a response for you, please try again.",
+    'retryMessage' => (isset($config['retry_message']) && !empty($config['retry_message'])) ? $config['retry_message'] : 'I was unable to get a response for you, please try again.',
     'fontSize' => (isset($config["font_size"]) && !empty($config["font_size"])) ? $config["font_size"] : 16,
     'avatar' => $botAvatar,
     // 'amplifyLoader' => $amplify_loader,
