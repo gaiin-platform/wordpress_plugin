@@ -2,6 +2,7 @@ const apiUrl = amplifyChatbotSettings.apiUrl;
 const AMPLIFY = "amplify";
 const USER = "user";
 const ASSISTANT = 'assistant';
+const UNAVAILABLE_MESSAGE = "I apologize, but I'm currently unavailable. Please try again in a few minutes.";
 const FAIL_MESSAGE = 'We are unable to reach Amplify at this time, please refresh the page and try again.';
 let content = [];
 let conversationTranscript = [];
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
         button.disabled = true;
     }
     fetchBotConfiguration();
-    
+
     const messageInput = document.querySelector('.lwh-open-cbot #message');
     if (messageInput) {
         messageInput.addEventListener('keydown', function (event) {
@@ -155,15 +156,38 @@ async function fetchBotConfiguration() {
               });
 
         } else {
-            if (loadingEl) loadingEl.style.display = 'none';
-            toggleShowPopupMessage(FAIL_MESSAGE);
             throw new Error("Request failed. Please try again! " + botResponse.status);
         }
     } catch (error) {
         console.log(error);
-        toggleShowPopupMessage(FAIL_MESSAGE);
+        // Config never loaded -> unavailable message. Config loaded but a later step failed -> keep the popup (status is Online).
+        if (Object.keys(botConfigData).length === 0) {
+            showAssistantUnavailable();
+        } else {
+            toggleShowPopupMessage(FAIL_MESSAGE);
+        }
         return;
     }
+}
+
+// Offline / config failure: stop the loader, mark offline, and show an assistant message. Input stays disabled.
+function showAssistantUnavailable() {
+    const loadingEl = document.querySelector('.lwh-open-cbot .loading');
+    if (loadingEl) loadingEl.style.display = 'none';
+    const statusEl = document.querySelector('.lwh-open-cbot .chat__status');
+    if (statusEl) statusEl.innerHTML = '<span></span> Offline';
+
+    const container = document.querySelector('.lwh-open-cbot .chat__messages');
+    if (!container) return;
+    const messageContainer = document.createElement('div');
+    messageContainer.classList.add('chat__messages__' + AMPLIFY);
+    messageContainer.appendChild(avatar());
+    const text = document.createElement('div');
+    text.classList.add('typing-container');
+    text.innerHTML = '<div class="message"><p></p></div>';
+    text.querySelector('p').textContent = UNAVAILABLE_MESSAGE;
+    messageContainer.appendChild(text);
+    container.appendChild(messageContainer);
 }
 
 /////////////////// On Load Messages /////////////////// 
@@ -1304,6 +1328,6 @@ function avatar() {
     botImageDiv.style.flexGrow = '0';
     // botImageDiv.style.width = '45px';
     // botImageDiv.style.height = '54px';
-    botImageDiv.innerHTML = `<img class="bot-image" src="${botConfigData.avatar}"  style=" flex-shrink: 0 !important; flex-grow: 0 !important; width: 56px !important; height: auto !important; " alt="amplify" alt="amplify">`;
+    botImageDiv.innerHTML = `<img class="bot-image" src="${botConfigData.avatar || (amplifyChatbotSettings.pluginUrl + 'assets/images/Vanderbilt-Emblem.png')}"  style=" flex-shrink: 0 !important; flex-grow: 0 !important; width: 56px !important; height: auto !important; " alt="amplify" alt="amplify">`;
     return botImageDiv;
 }

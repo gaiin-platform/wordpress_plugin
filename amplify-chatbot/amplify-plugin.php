@@ -82,11 +82,11 @@ function amplify_chatbot_enqueue_scripts() {
         return;
     }
 
-    wp_enqueue_style('amplify-chatbot-style', plugins_url('frontend/style.css', __FILE__), array(), '1.0');
+    wp_enqueue_style('amplify-chatbot-style', plugins_url('frontend/style.css', __FILE__), array(), filemtime(plugin_dir_path(__FILE__) . 'frontend/style.css'));
     wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css', array(), '6.2.1');
     wp_enqueue_script('marked', 'https://cdn.jsdelivr.net/npm/marked/marked.min.js', array(), null, true);
     wp_enqueue_script('dompurify', 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.8/purify.min.js', array(), '2.3.8', true);
-    wp_enqueue_script('amplify-chatbot-script', plugins_url('frontend/script.js', __FILE__), array('jquery', 'marked', 'dompurify'), '1.0', true);
+    wp_enqueue_script('amplify-chatbot-script', plugins_url('frontend/script.js', __FILE__), array('jquery', 'marked', 'dompurify'), filemtime(plugin_dir_path(__FILE__) . 'frontend/script.js'), true);
 
     $current_user = wp_get_current_user();
     $user_email = $current_user->exists() ? $current_user->user_email : '';
