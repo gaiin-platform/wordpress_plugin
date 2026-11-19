@@ -1328,6 +1328,6 @@ function avatar() {
     botImageDiv.style.flexGrow = '0';
     // botImageDiv.style.width = '45px';
     // botImageDiv.style.height = '54px';
-    botImageDiv.innerHTML = `<img class="bot-image" src="${botConfigData.avatar || (amplifyChatbotSettings.pluginUrl + 'assets/images/Vanderbilt-Emblem.png')}"  style=" flex-shrink: 0 !important; flex-grow: 0 !important; width: 56px !important; height: auto !important; " alt="amplify" alt="amplify">`;
+    botImageDiv.innerHTML = `<img class="bot-image" src="${botConfigData.avatar || amplifyChatbotSettings.avatarUrl}"  style=" flex-shrink: 0 !important; flex-grow: 0 !important; width: 56px !important; height: auto !important; " alt="amplify" alt="amplify">`;
     return botImageDiv;
 }

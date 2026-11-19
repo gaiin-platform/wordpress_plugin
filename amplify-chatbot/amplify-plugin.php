@@ -100,6 +100,7 @@ function amplify_chatbot_enqueue_scripts() {
         'shouldRender' => true,
         'userEmail' => $user_email,
         'pluginUrl' => plugin_dir_url(__FILE__),
+        'avatarUrl' => esc_url_raw(amplify_get_image_url('amplify_avatar_image_id', 'Vanderbilt-Emblem.png')),
     ));
 }
 add_action('wp_enqueue_scripts', 'amplify_chatbot_enqueue_scripts');
